@@ -1,0 +1,30 @@
+[server]
+	Address        = ":8199"
+	ServerAgent    = "gf-admin-api"
+	LogPath        = "./log"
+	NameToUriType  = 3  # 驼峰
+	RouteOverWrite = true
+    DataEncryptionKey = "123456" # 数据加密密钥
+
+# 全局日志配置
+[logger]
+    Path   = "./log"
+    Level  = "all"
+    Stdout = true
+
+
+
+# 数据库连接
+[database]
+    link  = "mysql:root:111111@tcp(127.0.0.1:3306)/gfadmin"
+    debug = true
+     Prefix = "ga_"
+    # 数据库日志对象配置
+    [database.logger]
+        Path   = "./log"
+        Level  = "all"
+        Stdout = true
+
+# redis
+[redis]
+    default = "127.0.0.1:6379,0"
