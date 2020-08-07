@@ -49,13 +49,14 @@ func main() {
 	//客户端连接
 	server.OnConnect("/", func(s socketio.Conn) error {
 		s.SetContext("")
-
+		fmt.Println("connect")
 		s.Join("test")
 		return nil
 	})
 
 	//客户登陆
 	server.OnEvent("/", "signIn", func(s socketio.Conn, msg Msg) {
+		fmt.Println("login")
 		s.Join(msg.Uid)
 	})
 
