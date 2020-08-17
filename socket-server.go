@@ -63,6 +63,7 @@ func main() {
 	//客服登陆
 	server.OnEvent("/", "kfSignIn", func(s socketio.Conn, msg User) {
 		s.Join(msg.Id)
+		s.Join("kf_group")
 	})
 
 	//接收客户端消息
@@ -105,9 +106,15 @@ func main() {
 			_, err := user.Data(g.Map{"status": 2}).Where("uid=?", msg.Uid).Update()
 			if err != nil {
 				log.Fatalf("更新user status失败：%s", err)
+				return
 			}
-			g.Redis().DoVar("RPUSH", "in_waiting", msg.Uid)
-
+			g.Redis().DoVar("RPUSH", "queue_list", msg.Uid)
+			queueCount, err := g.Redis().Do("LLEN", "queue_list")
+			if err != nil {
+				log.Fatalf("获取排队人数失败：%s", err)
+			}
+			server.BroadcastToRoom("", "kf_group", "queueCount", queueCount)
+			server.BroadcastToRoom("", "kf_group", "enterQueue", msg)
 		}
 
 		var answer Msg
@@ -131,6 +138,7 @@ func main() {
 		//s.Join(msg.Uid)
 	})
 
+	//客户H5初始化数据
 	server.OnEvent("/", "initData", func(s socketio.Conn, msg Msg) {
 		chatRecords := g.DB().Table("chat_records")
 		r, err := chatRecords.Fields("id,sender,receiver,aes_decrypt(from_base64(content),'"+DataEncryptionKey+"') as content ,time").Where("sender=?", msg.Uid).Or("receiver=?", msg.Uid).OrderBy("time asc").All()
@@ -138,8 +146,49 @@ func main() {
 			log.Fatalf("初始化失败：", err)
 		}
 		s.Emit("initData", r)
+	})
+
+	//客服接入排队中的客户
+	server.OnEvent("/", "receive", func(s socketio.Conn, msg Msg) {
+		user := g.DB().Table("client")
+		_, err1 := user.Where("uid=?", msg.Uid).FindOne()
+		if err1 != nil {
+			log.Fatalf("查询user失败：%s", err1)
+			return
+		}
+		_, err2 := g.Redis().DoVar("LREM", "queue_list", 0, msg.Uid)
+		fmt.Println(msg.Uid)
+		if err2 != nil {
+			log.Fatalf("排队队列删除当前uid失败：%s", err2)
+			return
+		}
+		//更新客户状态为接待中
+		_, err3 := user.Data(g.Map{"status": 3}).Where("uid=?", msg.Uid).Update()
+		if err3 != nil {
+			log.Fatalf("更新user status失败：%s", err)
+		}
+		queueCount, err := g.Redis().Do("LLEN", "queue_list")
+		if err != nil {
+			log.Fatalf("获取排队人数失败：%s", err)
+		}
+		server.BroadcastToRoom("", "kf_group", "queueCount", queueCount)
+		server.BroadcastToRoom("", "kf_group", "deleteQueueOne", msg)
 
 	})
+
+	server.OnEvent("/", "endConversation", func(s socketio.Conn, uid string) {
+		user := g.DB().Table("client")
+		if uid == "" {
+			log.Fatalf("结束会话参数错误：%s", err)
+			return
+		}
+		_, err3 := user.Data(g.Map{"status": 1}).Where("uid=?", uid).Update()
+		if err3 != nil {
+			log.Fatalf("更新user status=1失败：%s", err)
+		}
+
+	})
+
 	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
 		s.SetContext(msg)
 		return "recv " + msg

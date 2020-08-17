@@ -31,8 +31,8 @@ func init() {
 	authMiddleware, err := jwt.New(&jwt.GfJWTMiddleware{
 		Realm:           "test zone",
 		Key:             []byte("secret key"),
-		Timeout:         time.Minute * 5,
-		MaxRefresh:      time.Minute * 5,
+		Timeout:         time.Minute * 5000,
+		MaxRefresh:      time.Minute * 5000,
 		IdentityKey:     "id",
 		TokenLookup:     "header: Authorization, query: token, cookie: jwt",
 		TokenHeadName:   "Bearer",
