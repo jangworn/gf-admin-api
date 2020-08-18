@@ -119,12 +119,13 @@ func Authenticator(r *ghttp.Request) (interface{}, error) {
 		return "", errors.New("incorrect Username or Password")
 	}
 
-	if _, err := user.SignIn(data["username"].(string), data["password"].(string), r.Session); err != nil {
+	if kfId, err := user.SignIn(data["username"].(string), data["password"].(string), r.Session); err != nil {
 		return "", jwt.ErrFailedAuthentication
 	} else {
 		return g.Map{
 			"username": data["username"],
 			"name":     data["username"],
+			"kfId":     kfId,
 		}, nil
 	}
 

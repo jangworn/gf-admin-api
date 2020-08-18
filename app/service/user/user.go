@@ -6,8 +6,6 @@ import (
 	"gf-admin-api/app/model/user"
 	"strconv"
 
-	"github.com/gogf/gf/os/gcache"
-
 	"github.com/gogf/gf/crypto/gmd5"
 
 	"github.com/gogf/gf/net/ghttp"
@@ -83,7 +81,7 @@ func IsSignedIn(session *ghttp.Session) bool {
 }
 
 // 用户登录，成功返回用户信息，否则返回nil; passport应当会md5值字符串
-func SignIn(Username, password string, session *ghttp.Session) (token string, err error) {
+func SignIn(Username, password string, session *ghttp.Session) (kfId int, err error) {
 	password, _ = gmd5.Encrypt(password)
 	one, err := user.FindOne("username=? and password=?", Username, password)
 
@@ -95,8 +93,7 @@ func SignIn(Username, password string, session *ghttp.Session) (token string, er
 		return
 	}
 
-	token, _ = gmd5.Encrypt(Username + password + gtime.Datetime())
-	gcache.Set(token, one, 0)
+	kfId = int(one.ID)
 
 	return
 }
