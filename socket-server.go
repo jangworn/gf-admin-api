@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gbase64"
@@ -20,12 +19,12 @@ type Msg struct {
 }
 
 type User struct {
-	Id int `json:"id"`
+	Id string `json:"id"`
 }
 
 type Receive struct {
 	Uid  string `json:"uid"`
-	KFID int    `json:"kfId"`
+	KFID string `json:"kfId"`
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -68,7 +67,8 @@ func main() {
 
 	//客服登陆
 	server.OnEvent("/", "kfSignIn", func(s socketio.Conn, msg User) {
-		s.Join(strconv.Itoa(msg.Id))
+		s.Join(msg.Id)
+		fmt.Println("客服登录:" + msg.Id)
 		s.Join("kf_group")
 	})
 
@@ -102,7 +102,8 @@ func main() {
 
 		//判断客户是否和人工对话中
 		if len(u) > 0 && u["status"].Int() == 3 {
-			server.BroadcastToRoom("", "123", "putQuestion", msg)
+			server.BroadcastToRoom("", u["kf_id"].String(), "putQuestion", msg)
+			fmt.Println("推送给客服：" + u["kf_id"].String())
 			return
 		}
 
@@ -170,7 +171,7 @@ func main() {
 			return
 		}
 		//更新客户状态为接待中
-		_, err3 := user.Data(g.Map{"status": 3, "kf_id": strconv.Itoa(msg.KFID)}).Where("uid=?", msg.Uid).Update()
+		_, err3 := user.Data(g.Map{"status": 3, "kf_id": msg.KFID}).Where("uid=?", msg.Uid).Update()
 		if err3 != nil {
 			log.Fatalf("更新user status失败：%s", err)
 		}
@@ -180,7 +181,7 @@ func main() {
 		}
 		server.BroadcastToRoom("", "kf_group", "queueCount", queueCount)
 		server.BroadcastToRoom("", "kf_group", "deleteQueueOne", msg)
-		server.BroadcastToRoom("", strconv.Itoa(msg.KFID), "newConversation", msg)
+		server.BroadcastToRoom("", msg.KFID, "newConversation", msg)
 
 	})
 
