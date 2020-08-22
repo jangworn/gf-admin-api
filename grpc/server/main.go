@@ -2,16 +2,24 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
+	"strconv"
+	"time"
 
 	pb "gf-admin-api/grpc/proto"
+
+	"gf-admin-api/grpc/discovery"
+	"gf-admin-api/grpc/discovery/register"
 
 	"google.golang.org/grpc"
 )
 
 const (
-	port = ":50052"
+	port       = 50052
+	host       = "localhost"
+	consulPort = 8500
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -31,12 +39,20 @@ func (s *server) SayHelloAgain(ctx context.Context, in *pb.HelloRequest) (*pb.He
 }
 
 func main() {
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
+	cr := register.NewConsulRegister(fmt.Sprintf("%s:%d", host, consulPort), 15)
+	cr.Register(discovery.RegisterInfo{
+		Host:           host,
+		Port:           port,
+		ServiceName:    "Greeter",
+		UpdateInterval: time.Second})
+
 	pb.RegisterGreeterServer(s, &server{})
+
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

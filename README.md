@@ -67,7 +67,27 @@ cd grpc-go/cmd/protoc-gen-go-grpc && go install .
   --go-grpc_opt=paths=source_relative \
   ./proto/grpc.proto
 
-  go run server/main.go
 
-  go run client/main.go
+```
+
+分布式部署grpc微服务
+```
+docker pull consul
+# 启动leader server
+docker run -d -p 8500:8500  --name=consul_server_1 consul agent -server -bootstrap -ui -node=1 -client='0.0.0.0'
+# 查看leader ip
+docker inspect -f '{{ .NetworkSettings.IPAddress }}' consul_server_1
+# 启动server2 server3 并加入到leader
+docker run -d -p 8500:8500  --name=consul_server_2 consul agent -server -node=2 -join='172.17.0.2'
+docker run -d -p 8500:8500  --name=consul_server_3 consul agent -server -node=3 -join='172.17.0.2'
+# 启动client1 client2 client3
+docker run -d  --name=consul_client_1 consul agent -client -node=4 -join='172.17.0.2' -client='0.0.0.0'
+docker run -d  --name=consul_client_2 consul agent -client -node=5 -join='172.17.0.2' -client='0.0.0.0'
+docker run -d  --name=consul_client_3 consul agent -client -node=6 -join='172.17.0.2' -client='0.0.0.0'
+# 查看leader server members
+docker exec consul_server_1 consul members
+
+cd grpc
+go run server/main.go
+go run client/main.go
 ```

@@ -2,23 +2,32 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"gf-admin-api/grpc/discovery/resolver"
 	pb "gf-admin-api/grpc/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/balancer/roundrobin"
 )
 
 const (
-	address     = "localhost:50052"
+	address     = "localhost:8500"
 	defaultName = "world"
+	serviceName = "Greeter"
 )
 
 func main() {
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	schema, err := resolver.GenerateAndRegisterConsulResolver(address, serviceName)
+	if err != nil {
+		log.Fatal("init consul resovler err", err.Error())
+	}
+	//conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(fmt.Sprintf("%s:///"+serviceName, schema), grpc.WithInsecure(), grpc.WithBalancerName(roundrobin.Name))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
