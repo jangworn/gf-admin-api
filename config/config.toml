@@ -16,7 +16,7 @@
 
 # 数据库连接
 [database]
-    link  = "mysql:root:111111@tcp(127.0.0.1:3306)/gfadmin"
+    link  = "mysql:root:111111@tcp(localhost:3306)/gfadmin"
     debug = true
      Prefix = "ga_"
     # 数据库日志对象配置

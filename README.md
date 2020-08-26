@@ -34,8 +34,7 @@ go env
 #### 运行http server
 go run main.go
 
-#### 运行socket server
-go run socket-server.go
+
 
 
 #### grpc proto
