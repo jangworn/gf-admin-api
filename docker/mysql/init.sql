@@ -1,33 +1,6 @@
--- phpMyAdmin SQL Dump
--- version 5.0.2
--- https://www.phpmyadmin.net/
---
--- 主机： localhost
--- 生成日期： 2020-08-05 12:25:05
--- 服务器版本： 8.0.20
--- PHP 版本： 7.3.19
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- 数据库： `gfadmin`
---
 CREATE DATABASE IF NOT EXISTS `gfadmin` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE `gfadmin`;
-
--- --------------------------------------------------------
-
---
--- 表的结构 `ga_chat_records`
---
 
 DROP TABLE IF EXISTS `ga_chat_records`;
 CREATE TABLE `ga_chat_records` (
@@ -37,10 +10,6 @@ CREATE TABLE `ga_chat_records` (
   `content` text NOT NULL COMMENT '内容',
   `time` datetime NOT NULL COMMENT '时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='聊天记录';
-
---
--- 转存表中的数据 `ga_chat_records`
---
 
 INSERT INTO `ga_chat_records` (`id`, `sender`, `receiver`, `content`, `time`) VALUES
 (1, 'MTIzNDU=', '999', 'DuVmhdAfp2h4jIa1P5O/wQ==', '2020-08-03 14:51:43'),
@@ -124,12 +93,6 @@ INSERT INTO `ga_chat_records` (`id`, `sender`, `receiver`, `content`, `time`) VA
 (79, 'MTIzNDU2', '999', 'XyKx+5NOwNwVGLHFbuVHkArHvWTfx3BlC+mP1lwvU4o=', '2020-08-04 21:47:46'),
 (80, '999', 'MTIzNDU2', 'yPILSUwmVwvFC+Y0QHMGtA==', '2020-08-04 21:47:46');
 
--- --------------------------------------------------------
-
---
--- 表的结构 `ga_client`
---
-
 DROP TABLE IF EXISTS `ga_client`;
 CREATE TABLE `ga_client` (
   `id` int NOT NULL COMMENT '自增',
@@ -141,21 +104,11 @@ CREATE TABLE `ga_client` (
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '对话状态（1：机器人，2：排队中，3：人工对话）'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='客户表';
 
---
--- 转存表中的数据 `ga_client`
---
-
 INSERT INTO `ga_client` (`id`, `name`, `kf_id`, `latest_time`, `uid`, `join_time`, `status`) VALUES
 (4, '', '', '2020-08-04 21:47:46', 'MTIzNDU2', '2020-06-26 15:36:03', 1),
 (5, '', '', '2020-08-03 21:24:25', 'MTIzNDU=', '2020-06-26 23:59:18', 1),
 (12, '', '', '2020-06-27 11:03:38', 'MTEx', '2020-06-27 11:02:15', 1),
 (13, '', '', '2020-08-04 17:57:02', '', '2020-08-03 21:35:27', 1);
-
--- --------------------------------------------------------
-
---
--- 表的结构 `ga_user`
---
 
 DROP TABLE IF EXISTS `ga_user`;
 CREATE TABLE `ga_user` (
@@ -167,9 +120,6 @@ CREATE TABLE `ga_user` (
   `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态，1：可用，0：停用'
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='账号表';
 
---
--- 转存表中的数据 `ga_user`
---
 
 INSERT INTO `ga_user` (`id`, `username`, `nickname`, `password`, `create_time`, `status`) VALUES
 (1, 'test11', 'aa123123', '01ee7f6575a386e7fa80958367c4c9ae', '2020-05-01 12:26:26', 1),
@@ -178,51 +128,20 @@ INSERT INTO `ga_user` (`id`, `username`, `nickname`, `password`, `create_time`, 
 (4, 'test112', '123', '01ee7f6575a386e7fa80958367c4c9ae', '2020-07-29 23:54:58', 1),
 (5, '123123', 'bbbb', '01ee7f6575a386e7fa80958367c4c9ae', '2020-08-03 22:05:23', 1);
 
---
--- 转储表的索引
---
 
---
--- 表的索引 `ga_chat_records`
---
-ALTER TABLE `ga_chat_records`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `ga_chat_records` ADD PRIMARY KEY (`id`);
 
---
--- 表的索引 `ga_client`
---
-ALTER TABLE `ga_client`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `ga_client`  ADD PRIMARY KEY (`id`);
 
---
--- 表的索引 `ga_user`
---
-ALTER TABLE `ga_user`
-  ADD PRIMARY KEY (`id`);
 
---
--- 在导出的表使用AUTO_INCREMENT
---
+ALTER TABLE `ga_user`  ADD PRIMARY KEY (`id`);
 
---
--- 使用表AUTO_INCREMENT `ga_chat_records`
---
-ALTER TABLE `ga_chat_records`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT COMMENT 'id', AUTO_INCREMENT=81;
 
---
--- 使用表AUTO_INCREMENT `ga_client`
---
-ALTER TABLE `ga_client`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT COMMENT '自增', AUTO_INCREMENT=14;
+ALTER TABLE `ga_chat_records` MODIFY `id` int NOT NULL AUTO_INCREMENT COMMENT 'id', AUTO_INCREMENT=81;
 
---
--- 使用表AUTO_INCREMENT `ga_user`
---
-ALTER TABLE `ga_user`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id', AUTO_INCREMENT=6;
-COMMIT;
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+ALTER TABLE `ga_client` MODIFY `id` int NOT NULL AUTO_INCREMENT COMMENT '自增', AUTO_INCREMENT=14;
+
+
+ALTER TABLE `ga_user` MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id', AUTO_INCREMENT=6;
+

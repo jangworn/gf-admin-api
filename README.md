@@ -34,7 +34,10 @@ go env
 #### 运行http server
 go run main.go
 
-
+### docker-compose 部署
+1. CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main main.go
+2. docker-compose build --no-cache
+3. docker-compose up -d
 
 
 #### grpc proto
