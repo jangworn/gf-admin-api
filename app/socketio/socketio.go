@@ -3,6 +3,7 @@ package socketio
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -10,6 +11,10 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gtime"
+	engineio "github.com/googollee/go-engine.io"
+	"github.com/googollee/go-engine.io/transport"
+	"github.com/googollee/go-engine.io/transport/polling"
+	"github.com/googollee/go-engine.io/transport/websocket"
 	socketio "github.com/googollee/go-socket.io"
 )
 
@@ -35,14 +40,19 @@ type Receive struct {
 func Server() (server *socketio.Server) {
 	db := g.DB()
 
-	/* cr := register.NewConsulRegister(fmt.Sprintf("%s:%d", host, consulPort), 15)
-	cr.Register(discovery.RegisterInfo{
-		Host:           host,
-		Port:           port,
-		ServiceName:    "Greeter",
-		UpdateInterval: time.Second}) */
-	//defer TestRegister()
-	server, err := socketio.NewServer(nil)
+	pt := polling.Default
+
+	wt := websocket.Default
+	wt.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
+
+	server, err := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			pt,
+			wt,
+		},
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
