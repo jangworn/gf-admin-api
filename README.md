@@ -31,7 +31,7 @@ go env
 ```
 
 
-#### 运行http server
+### 运行http server
 go run main.go
 
 ### docker-compose 部署
@@ -39,8 +39,24 @@ go run main.go
 2. docker-compose build --no-cache
 3. docker-compose up -d
 
+### jenkins持续部署
+```
+# 服务部署采用docker部署方式，jenkins就不能用docker安装,以ubuntu为例
+wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt-get update
+sudo apt-get install jenkins
 
-#### grpc proto
+# 编辑/etc/default/jenkins，修改web端口
+# 启动jenkins
+service jenkins start
+# 浏览器访问http://localhost:8080,系统管理->插件管理->安装Go Plugin
+# 系统管理->全局工具配置->点击Go安装按钮->设置别名和ubuntu的GOROOT对应目录
+# 新建任务->选择构建自由风格软件项目->general配置github仓库地址->源码管理配置github仓库、credentials、分支->构建环境Set up Go programming language tools->构建shell输入框填入上面docker-compose的3行命令->保存
+```
+
+
+### grpc proto
 ```
 # ubuntu
 PB_REL="https://github.com/protocolbuffers/protobuf/releases"
