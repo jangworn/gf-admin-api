@@ -37,6 +37,13 @@ type Receive struct {
 	KFID string `json:"kfId"`
 }
 
+type Record struct {
+	Id      int
+	Content string
+	Time    string
+	Sender  string
+}
+
 func Server() (server *socketio.Server) {
 	db := g.DB()
 
@@ -197,6 +204,7 @@ func Server() (server *socketio.Server) {
 
 	})
 
+	//结束会话
 	server.OnEvent("/", "endConversation", func(s socketio.Conn, uid string) {
 		user := g.DB().Table("client")
 		if uid == "" {
@@ -208,6 +216,51 @@ func Server() (server *socketio.Server) {
 			log.Fatalf("更新user status=1失败：%s", err)
 		}
 
+	})
+
+	//进入聊天室
+	server.OnEvent("/", "enterRoom", func(s socketio.Conn, msg User) {
+		s.Join(msg.Id)
+		fmt.Println("进入聊天室:" + msg.Id)
+		s.Join("room")
+		chatRoomRecords := g.DB().Table("chatroom_records")
+		r, err := chatRoomRecords.Fields("id,sender,aes_decrypt(from_base64(content),'" + DataEncryptionKey + "') as content ,time").OrderBy("time asc").All()
+		if err != nil {
+			log.Fatalf("初始化失败：", err)
+		}
+		server.BroadcastToRoom("", "room", "roomLen", server.RoomLen("", "room"))
+		s.Emit("initRoomData", r)
+	})
+
+	//发送内容到聊天室
+	server.OnEvent("/", "sendToRoom", func(s socketio.Conn, msg Msg) {
+		user := g.DB().Table("client")
+		msg.Content, _ = gbase64.DecodeToString(msg.Content)
+		content, _ := url.QueryUnescape(msg.Content)
+		u, err := user.Where("uid=?", msg.Uid).FindOne()
+		if err != nil {
+			log.Fatalf("查询user失败：%s", err)
+		}
+		//判断客户在client表中是否存在，存在更新latest_time,不存在插入客户表
+		if len(u) == 0 {
+			_, err := user.Data(g.Map{"uid": msg.Uid, "join_time": gtime.Datetime(), "latest_time": gtime.Datetime()}).Insert()
+			if err != nil {
+				log.Fatalf("插入user失败：%s", err)
+			}
+		} else {
+			_, err := user.Data(g.Map{"latest_time": gtime.Datetime()}).Where("uid=?", msg.Uid).Update()
+			if err != nil {
+				log.Fatalf("更新user失败：%s", err)
+			}
+		}
+
+		//插入用户输入内容
+		_, err = db.Query("insert into ga_chatroom_records(sender,content,time,room_id) value('" + msg.Uid + "',to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "',1);")
+		if err != nil {
+			log.Fatalf("问题写入失败：%s", err)
+		}
+		fmt.Println("广播:" + content)
+		server.BroadcastToRoom("", "room", "broadcast", Record{Id: 1, Content: content, Time: gtime.Datetime(), Sender: msg.Uid})
 	})
 
 	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
@@ -224,6 +277,7 @@ func Server() (server *socketio.Server) {
 		fmt.Println("meet error:", e)
 	})
 	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		server.BroadcastToRoom("", "room", "roomLen", server.RoomLen("", "room"))
 		fmt.Println("closed", reason)
 
 	})
