@@ -12,5 +12,6 @@ func main() {
 	server := socketio.Server()
 	go server.Serve()
 	defer server.Close()
+	g.Server().EnablePProf()
 	g.Server().Run()
 }

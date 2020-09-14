@@ -3,7 +3,8 @@
 一个前后端分离管理后台，前端Vue.js 、后端GoFrame
 
 ### web
-[gf-admin-web](https://github.com/jangworn/gf-admin-web)
+[gf-admin-web](https://github.com/jangworn/gf-admin-web)  
+[简易聊天室chat-room](https://github.com/jangworn/chat-room)  
 
 
 #### golang环境搭建
