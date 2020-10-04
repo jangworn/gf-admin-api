@@ -5,6 +5,7 @@ import (
 	"gf-admin-api/app/model/chat_record"
 	"gf-admin-api/app/model/chatroom_record"
 	"gf-admin-api/app/model/client"
+	"gf-admin-api/app/model/friendship"
 	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -34,6 +35,12 @@ type User struct {
 	Id string `json:"id"`
 }
 
+type Client struct{
+	Uid string `json:"uid"`
+	RoomId string `json:"roomId"`
+	Content string `json:"content"`
+}
+
 type Receive struct {
 	Uid  string `json:"uid"`
 	KFID string `json:"kfId"`
@@ -44,6 +51,12 @@ type Record struct {
 	Content string
 	Time    string
 	Sender  string
+}
+
+type Frindship struct {
+	Applicant string
+	Respondent string
+	Message string
 }
 
 func Server() (server *socketio.Server) {
@@ -221,23 +234,25 @@ func Server() (server *socketio.Server) {
 	})
 
 	//进入聊天室
-	server.OnEvent("/", "enterRoom", func(s socketio.Conn, msg User) {
-		s.Join(msg.Id)
-		fmt.Println("进入聊天室:" + msg.Id)
-		s.Join("room")
-		r, err := chatroom_record.Model.Fields("id,sender,aes_decrypt(from_base64(content),'" + DataEncryptionKey + "') as content ,time").Order("time asc").All()
+	server.OnEvent("/", "enterRoom", func(s socketio.Conn, msg Client) {
+		s.Join(msg.Uid)
+		fmt.Println("进入聊天室:" + msg.Uid)
+		roomId := "room"+ msg.RoomId
+		s.Join(roomId)
+		r, err := chatroom_record.Model.Fields("id,sender,aes_decrypt(from_base64(content),'" + DataEncryptionKey + "') as content ,time").Where("room_id=?",msg.RoomId).Order("time asc").All()
 		if err != nil {
 			log.Fatalf("初始化失败：%s", err)
 		}
-		server.BroadcastToRoom("", "room", "roomLen", server.RoomLen("", "room"))
+		server.BroadcastToRoom("", roomId, "roomLen", server.RoomLen("", roomId))
 		s.Emit("initRoomData", r)
 	})
 
 	//发送内容到聊天室
-	server.OnEvent("/", "sendToRoom", func(s socketio.Conn, msg Msg) {
+	server.OnEvent("/", "sendToRoom", func(s socketio.Conn, msg Client) {
 
 		msg.Content, _ = gbase64.DecodeToString(msg.Content)
 		content, _ := url.QueryUnescape(msg.Content)
+		roomId := "room"+ msg.RoomId
 		u, err := client.Model.Where("uid=?", msg.Uid).FindOne()
 		if err != nil {
 			log.Fatalf("查询user失败：%s", err)
@@ -257,14 +272,21 @@ func Server() (server *socketio.Server) {
 		}
 
 		//插入用户输入内容
-		_, err = db.Query("insert into chatroom_record(sender,content,time,room_id) value('" + msg.Uid + "',to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "',1);")
+		_, err = db.Query("insert into chatroom_record(sender,content,time,room_id) value('" + msg.Uid + "',to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "','"+msg.RoomId+"');")
 		if err != nil {
 			log.Fatalf("问题写入失败：%s", err)
 		}
 		fmt.Println("广播:" + content)
-		server.BroadcastToRoom("", "room", "broadcast", Record{Id: 1, Content: content, Time: gtime.Datetime(), Sender: msg.Uid})
+		server.BroadcastToRoom("", roomId, "broadcast", Record{Id: 1, Content: content, Time: gtime.Datetime(), Sender: msg.Uid})
 	})
 
+	//加好友
+	server.OnEvent("/", "addFriend", func(s socketio.Conn, msg Frindship)  {
+		_, err := friendship.Model.Data(g.Map{"applicant": msg.Applicant, "respondent":msg.Respondent,"message":msg.Message,"create_time": gtime.Datetime()}).Insert()
+		if err != nil{
+			log.Fatalf("申请好友写入失败：%s", err)
+		}
+	})
 	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {
 		s.SetContext(msg)
 		return "recv " + msg
