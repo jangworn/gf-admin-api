@@ -18,10 +18,11 @@ func init() {
 		ctlUser := new(user.Controller)
 		ctlReceive := new(receive.Controller)
 		ctlClient := new(client.Controller)
+		g.ALL("/client", ctlClient)
 		g.Middleware(middleware.Auth)
 		g.ALL("/refreshToken", middleware.GfJWTMiddleware.RefreshHandler)
 		g.ALL("/user", ctlUser)
 		g.ALL("/receive", ctlReceive)
-		g.ALL("/client", ctlClient)
+
 	})
 }
