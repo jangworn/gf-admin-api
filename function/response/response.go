@@ -20,7 +20,12 @@ func Json(r *ghttp.Request, message string, data ...interface{}) {
 		responseData = data[0]
 		code = 200
 	} else {
-		code = 400
+		if data == nil && message == ""{
+			code = 200
+		}else{
+			code = 400
+		}
+
 	}
 	r.Response.WriteJson(JsonResponse{
 		Code:    code,
