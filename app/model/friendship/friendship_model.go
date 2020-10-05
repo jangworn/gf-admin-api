@@ -30,7 +30,7 @@ var (
         Message     string // 验证留言  
         CreateTime  string // 时间      
         UpdateTime  string // 更新时间  
-        Stauts      string // 状态
+        Status      string // 状态
 	}{
 		Id:         "id",           
         Applicant:  "applicant",    
@@ -38,7 +38,7 @@ var (
         Message:    "message",      
         CreateTime: "create_time",  
         UpdateTime: "update_time",  
-        Stauts:     "stauts",
+        Status:     "status",
 	}
 )
 

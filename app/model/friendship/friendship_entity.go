@@ -18,7 +18,7 @@ type Entity struct {
     Message    string      `orm:"message"     json:"message"`     // 验证留言  
     CreateTime *gtime.Time `orm:"create_time" json:"create_time"` // 时间      
     UpdateTime *gtime.Time `orm:"update_time" json:"update_time"` // 更新时间  
-    Stauts     uint        `orm:"stauts"      json:"stauts"`      // 状态      
+    Status     uint        `orm:"status"      json:"status"`      // 状态
 }
 
 // OmitEmpty sets OPTION_OMITEMPTY option for the model, which automatically filers
