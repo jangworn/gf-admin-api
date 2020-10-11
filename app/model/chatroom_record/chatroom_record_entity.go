@@ -12,11 +12,11 @@ import (
 
 // Entity is the golang structure for table chatroom_record.
 type Entity struct {
-    Id      uint64      `orm:"id,primary" json:"id"`      //   
-    Sender  string      `orm:"sender"     json:"sender"`  //   
-    Content string      `orm:"content"    json:"content"` //   
-    Time    *gtime.Time `orm:"time"       json:"time"`    //   
-    RoomId  uint        `orm:"room_id"    json:"room_id"` //   
+    Id      uint64      `orm:"id,primary" json:"id"`      // id        
+    Sender  string      `orm:"sender"     json:"sender"`  // 发送人id  
+    Content string      `orm:"content"    json:"content"` // 内容      
+    Time    *gtime.Time `orm:"time"       json:"time"`    // 时间      
+    RoomId  uint        `orm:"room_id"    json:"room_id"` // 群聊id    
 }
 
 // OmitEmpty sets OPTION_OMITEMPTY option for the model, which automatically filers

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gf-admin-api/app/service/client"
 	"gf-admin-api/function/response"
-
 	"github.com/gogf/gf/net/ghttp"
+	"log"
 )
 
 // 客户端API管理对象
@@ -85,3 +85,25 @@ func (c *Controller) Unfriend(r *ghttp.Request){
 	}
 	response.JsonExit(r,"参数错误")
 }
+
+/**
+ * @summary: 创建群聊
+ * @tags:
+ * @produce: json
+ * @param {type}
+ * @router: /client/createChatroom [POST]
+ * @return:
+ */
+func (c *Controller) CreateChatroom(r *ghttp.Request){
+	uid := r.GetString("uid")
+	checkedFriends := r.GetArray("checkedFriends")
+	fmt.Println(uid,checkedFriends)
+	room_id,err := client.CreateChatroom()
+	if err != nil{
+		log.Fatalf("创建聊天室失败：%s",err)
+	}
+	client.InsertChatroomClient(uid,room_id,checkedFriends)
+
+	response.JsonExit(r,"")
+}
+

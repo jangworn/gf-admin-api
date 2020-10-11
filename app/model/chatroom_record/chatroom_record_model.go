@@ -24,11 +24,11 @@ var (
 	Model = &arModel{g.DB("default").Table(Table).Safe()}
 	// Columns defines and stores column names for table chatroom_record.
 	Columns = struct {
-		Id       string //   
-        Sender   string //   
-        Content  string //   
-        Time     string //   
-        RoomId   string //
+		Id       string // id        
+        Sender   string // 发送人id  
+        Content  string // 内容      
+        Time     string // 时间      
+        RoomId   string // 群聊id
 	}{
 		Id:      "id",       
         Sender:  "sender",   
