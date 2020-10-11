@@ -107,3 +107,17 @@ func (c *Controller) CreateChatroom(r *ghttp.Request){
 	response.JsonExit(r,"")
 }
 
+/**
+ * @summary: 群聊列表
+ * @tags:
+ * @produce: json
+ * @param {type}
+ * @router: /client/getChatroomList [GET]
+ * @return:
+ */
+func (c *Controller) GetChatroomList(r *ghttp.Request){
+	uid := r.GetString("uid")
+	response.JsonExit(r,"",client.GetChatroomList(uid))
+}
+
+

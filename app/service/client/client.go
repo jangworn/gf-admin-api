@@ -63,3 +63,8 @@ func InsertChatroomClient(owner string,room_id int64,checkedClient []string) (er
 	chatroom_client.Model.Data(list).Insert()
 	return nil
 }
+
+func GetChatroomList(uid string) (list []*chatroom.Entity){
+	list, _ = chatroom.Model.LeftJoin("chatroom_client cc","chatroom.id = cc.room_id").Fields("chatroom.id,name").Where("cc.uid=?",uid).FindAll()
+	return
+}
