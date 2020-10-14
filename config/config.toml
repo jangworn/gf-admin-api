@@ -18,7 +18,7 @@
 [database]
     link  = "mysql:root:111111@tcp(172.17.0.1:13306)/gfadmin"
     debug = true
-     Prefix = "ga_"
+     Prefix = ""
     # 数据库日志对象配置
     [database.logger]
         Path   = "./log"
