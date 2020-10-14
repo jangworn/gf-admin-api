@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主机： localhost
--- 生成日期： 2020-09-28 23:15:44
+-- 生成日期： 2020-10-14 23:24:54
 -- 服务器版本： 8.0.20
 -- PHP 版本： 7.3.19
 
@@ -26,16 +26,73 @@ USE `gfadmin`;
 -- --------------------------------------------------------
 
 --
+-- 表的结构 `chatroom`
+--
+
+DROP TABLE IF EXISTS `chatroom`;
+CREATE TABLE `chatroom` (
+  `id` int NOT NULL COMMENT 'id',
+  `name` varchar(255) NOT NULL COMMENT '群聊名称',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态(1:正常,0:不可用)',
+  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- 转存表中的数据 `chatroom`
+--
+
+INSERT INTO `chatroom` (`id`, `name`, `status`, `create_time`, `update_time`) VALUES
+(1, '公共聊天室', 1, '2020-10-11 22:20:20', NULL),
+(2, '群聊', 1, '2020-10-11 22:21:18', NULL),
+(3, '群聊', 1, '2020-10-11 22:22:36', NULL),
+(4, '群聊', 1, '2020-10-11 22:24:14', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `chatroom_client`
+--
+
+DROP TABLE IF EXISTS `chatroom_client`;
+CREATE TABLE `chatroom_client` (
+  `id` int UNSIGNED NOT NULL COMMENT 'id',
+  `room_id` int UNSIGNED NOT NULL COMMENT '群聊房间id',
+  `uid` varchar(100) NOT NULL COMMENT '用户id',
+  `nickname` varchar(100) NOT NULL DEFAULT '' COMMENT '昵称',
+  `is_owner` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否是群主'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='聊天室';
+
+--
+-- 转存表中的数据 `chatroom_client`
+--
+
+INSERT INTO `chatroom_client` (`id`, `room_id`, `uid`, `nickname`, `is_owner`) VALUES
+(1, 1, 'MjIyMQ==', '', 0),
+(2, 1, 'MzMz', '', 0),
+(3, 1, 'MjIy', '', 0),
+(4, 2, 'MjIyMQ==', '', 0),
+(5, 2, 'MzMz', '', 0),
+(6, 2, 'MjIy', '', 1),
+(7, 3, 'MjIyMQ==', '', 0),
+(8, 3, 'MzMz', '', 0),
+(9, 3, 'MjIy', '', 1),
+(10, 4, 'MjIyMQ==', '', 0),
+(11, 4, 'MjIy', '', 1);
+
+-- --------------------------------------------------------
+
+--
 -- 表的结构 `chatroom_record`
 --
 
 DROP TABLE IF EXISTS `chatroom_record`;
 CREATE TABLE `chatroom_record` (
-  `id` bigint UNSIGNED NOT NULL,
-  `sender` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `content` text NOT NULL,
-  `time` datetime NOT NULL,
-  `room_id` int UNSIGNED NOT NULL
+  `id` bigint UNSIGNED NOT NULL COMMENT 'id',
+  `sender` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '发送人id',
+  `content` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '内容',
+  `time` datetime NOT NULL COMMENT '时间',
+  `room_id` int UNSIGNED NOT NULL COMMENT '群聊id'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='聊天室聊天记录';
 
 --
@@ -119,7 +176,17 @@ INSERT INTO `chatroom_record` (`id`, `sender`, `content`, `time`, `room_id`) VAL
 (74, 'MjIy', '7O+/KCR40jqDyX5Z8XyAfQ==', '2020-09-28 22:57:57', 1),
 (75, 'MjIy', 'boLVO5Ua01p9nrz1/i3cNZiX3/XMkGce9P0Sb/ZXAHVJIdsGBo5JNXZDAqWj0P5ekFtxyJrrOpcj\nHS2f+p9sXA==', '2020-09-28 22:58:01', 1),
 (76, 'MzMz', 'tUsyWsx0Kq0d+nio+JQT+4rfNNulw2QIECyFqtuw5x8Xf9qWdAIvErEs+cxg0U6Xa7LUPEQmgzZ9\nqmU5VHZwK0fg5PVL9qmWpMx+wASstXk=', '2020-09-28 22:58:04', 1),
-(77, 'MzMz', '19SclkBkbTGYX6syB2pLpA==', '2020-09-28 22:58:06', 1);
+(77, 'MzMz', '19SclkBkbTGYX6syB2pLpA==', '2020-09-28 22:58:06', 1),
+(78, 'MjIy', 'XfbveiuUaCDuMoenZgMxmg==', '2020-10-02 16:30:20', 1),
+(79, 'MjIyMQ==', '4Gjjao6AE6uUQwfelGBQQg==', '2020-10-02 20:43:41', 1),
+(80, 'MjIyMQ==', 'XfbveiuUaCDuMoenZgMxmg==', '2020-10-02 20:44:00', 1),
+(81, 'MjIyMQ==', 'BnBGPA3b/azNspnl04V3Jw==', '2020-10-02 20:44:03', 1),
+(82, 'MjIy', 'KGuN/9I/u9YCKTFYBAeN5A==', '2020-10-02 20:44:05', 1),
+(83, 'MjIy', 'eCqoPY1myYWDcwA6ZwwYDA==', '2020-10-04 00:23:12', 1),
+(84, 'MjIy', 'L9MxdDuXe+l53XuwVmaa3uthzp4gfJ7VtDjc2Nw3L08=', '2020-10-04 00:30:08', 2),
+(85, 'MjIy', 'XOfcWY9/FOa/tBsA7QKuO/6LuN7JLtl6d/RPeSQEv30=', '2020-10-04 00:30:28', 3),
+(86, 'MjIy', 'VeFJQujp+KwnElTfVmtweQ==', '2020-10-05 15:05:21', 2),
+(87, 'MjIy', 'XN4LuAFO4cizLP1y/0BB6Q==', '2020-10-11 23:23:13', 1);
 
 -- --------------------------------------------------------
 
@@ -517,11 +584,38 @@ INSERT INTO `client` (`id`, `name`, `kf_id`, `latest_time`, `uid`, `join_time`, 
 (19, '', '', '2020-09-11 15:28:21', 'MzMzMw==', '2020-09-11 14:08:13', 1),
 (20, '', '', '2020-09-11 14:36:57', 'MzRkZHM=', '2020-09-11 14:18:30', 1),
 (21, '', '', '2020-09-11 17:12:48', 'OTk5OQ==', '2020-09-11 16:55:29', 1),
-(22, '', '', '2020-09-28 22:58:01', 'MjIy', '2020-09-11 16:55:35', 1),
+(22, '', '', '2020-10-11 23:23:13', 'MjIy', '2020-09-11 16:55:35', 1),
 (23, '', '', '2020-09-11 16:56:08', 'MDAwMDA=', '2020-09-11 16:56:08', 1),
 (24, '', '', '2020-09-11 17:22:22', 'ODg4ODg=', '2020-09-11 17:22:22', 1),
 (25, '', '', '2020-09-11 17:45:20', 'c3Nz', '2020-09-11 17:45:20', 1),
-(29, '', '', '2020-09-28 22:58:06', 'MzMz', '2020-09-28 22:57:05', 1);
+(29, '', '', '2020-09-28 22:58:06', 'MzMz', '2020-09-28 22:57:05', 1),
+(30, '', '', '2020-10-02 20:44:03', 'MjIyMQ==', '2020-10-02 20:43:41', 1);
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `friendship`
+--
+
+DROP TABLE IF EXISTS `friendship`;
+CREATE TABLE `friendship` (
+  `id` int UNSIGNED NOT NULL,
+  `applicant` varchar(100) NOT NULL COMMENT '申请人',
+  `respondent` varchar(100) NOT NULL COMMENT '被申请人',
+  `message` varchar(100) NOT NULL COMMENT '验证留言',
+  `create_time` datetime NOT NULL COMMENT '时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `status` tinyint UNSIGNED NOT NULL DEFAULT '0' COMMENT '状态'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='好友关系';
+
+--
+-- 转存表中的数据 `friendship`
+--
+
+INSERT INTO `friendship` (`id`, `applicant`, `respondent`, `message`, `create_time`, `update_time`, `status`) VALUES
+(1, 'MjIy', 'MjIyMQ==', '你好吗，我是想23', '2020-10-04 14:55:50', NULL, 0),
+(2, 'MjIyMQ==', 'MjIy', '333', '2020-10-04 23:02:12', NULL, 1),
+(3, 'MzMz', 'MjIy', '123123123', '2020-10-05 11:37:07', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -557,6 +651,18 @@ INSERT INTO `user` (`id`, `username`, `nickname`, `password`, `create_time`, `st
 --
 
 --
+-- 表的索引 `chatroom`
+--
+ALTER TABLE `chatroom`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 表的索引 `chatroom_client`
+--
+ALTER TABLE `chatroom_client`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- 表的索引 `chatroom_record`
 --
 ALTER TABLE `chatroom_record`
@@ -576,6 +682,12 @@ ALTER TABLE `client`
   ADD UNIQUE KEY `uid` (`uid`);
 
 --
+-- 表的索引 `friendship`
+--
+ALTER TABLE `friendship`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- 表的索引 `user`
 --
 ALTER TABLE `user`
@@ -586,10 +698,22 @@ ALTER TABLE `user`
 --
 
 --
+-- 使用表AUTO_INCREMENT `chatroom`
+--
+ALTER TABLE `chatroom`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT COMMENT 'id', AUTO_INCREMENT=5;
+
+--
+-- 使用表AUTO_INCREMENT `chatroom_client`
+--
+ALTER TABLE `chatroom_client`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id', AUTO_INCREMENT=12;
+
+--
 -- 使用表AUTO_INCREMENT `chatroom_record`
 --
 ALTER TABLE `chatroom_record`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'id', AUTO_INCREMENT=88;
 
 --
 -- 使用表AUTO_INCREMENT `chat_record`
@@ -601,7 +725,13 @@ ALTER TABLE `chat_record`
 -- 使用表AUTO_INCREMENT `client`
 --
 ALTER TABLE `client`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT COMMENT '自增', AUTO_INCREMENT=30;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT COMMENT '自增', AUTO_INCREMENT=31;
+
+--
+-- 使用表AUTO_INCREMENT `friendship`
+--
+ALTER TABLE `friendship`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- 使用表AUTO_INCREMENT `user`
