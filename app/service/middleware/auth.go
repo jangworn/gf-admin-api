@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -40,9 +39,10 @@ func init() {
 		Authenticator:   Authenticator,
 		LoginResponse:   LoginResponse,
 		RefreshResponse: RefreshResponse,
+		LogoutResponse:  LogoutResponse,
 		Unauthorized:    Unauthorized,
-		IdentityHandler: IdentityHandler,
 		PayloadFunc:     PayloadFunc,
+		IdentityHandler: IdentityHandler,
 	})
 	if err != nil {
 		glog.Fatal("JWT Error:" + err.Error())
@@ -68,13 +68,22 @@ func PayloadFunc(data interface{}) jwt.MapClaims {
 			claims[k] = v
 		}
 	}
+
 	return claims
+}
+
+func LogoutResponse(r *ghttp.Request, code int) {
+	r.Response.WriteJson(g.Map{
+		"code":    code,
+		"message": "success",
+	})
+	r.ExitAll()
 }
 
 // IdentityHandler sets the identity for JWT.
 func IdentityHandler(r *ghttp.Request) interface{} {
 	claims := jwt.ExtractClaims(r)
-	return claims["id"]
+	return claims[GfJWTMiddleware.IdentityKey]
 }
 
 // Unauthorized is used to define customized Unauthorized callback function.
@@ -114,7 +123,7 @@ func Authenticator(r *ghttp.Request) (interface{}, error) {
 	if e := gvalid.CheckMap(data, ValidationRules); e != nil {
 		return nil, jwt.ErrFailedAuthentication
 	}
-	fmt.Println(http.StatusUnauthorized)
+
 	if data["username"] == nil || data["password"] == nil {
 		return "", errors.New("incorrect Username or Password")
 	}
@@ -126,7 +135,9 @@ func Authenticator(r *ghttp.Request) (interface{}, error) {
 			"username": data["username"],
 			"name":     data["username"],
 			"kfId":     kfId,
+			"id": kfId,
 		}, nil
+
 	}
 
 	return nil, jwt.ErrFailedAuthentication

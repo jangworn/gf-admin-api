@@ -10,11 +10,11 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gtime"
-	engineio "github.com/googollee/go-engine.io"
-	"github.com/googollee/go-engine.io/transport"
-	"github.com/googollee/go-engine.io/transport/polling"
-	"github.com/googollee/go-engine.io/transport/websocket"
 	socketio "github.com/googollee/go-socket.io"
+	engineio "github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 	"log"
 	"net/http"
 	"net/url"
@@ -68,16 +68,14 @@ func Server() (server *socketio.Server) {
 	wt.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
-
-	server, err := socketio.NewServer(&engineio.Options{
+	var err error
+	server = socketio.NewServer(&engineio.Options{
 		Transports: []transport.Transport{
 			pt,
 			wt,
 		},
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
+
 	g.Server().BindMiddlewareDefault(CORS)
 	g.Server().BindHandler("/socket.io/", func(r *ghttp.Request) {
 		server.ServeHTTP(r.Response.Writer, r.Request)
