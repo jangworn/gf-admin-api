@@ -1,6 +1,8 @@
 package user
 
 import (
+	"fmt"
+	"gf-admin-api/app/model"
 	"gf-admin-api/app/service/user"
 	"gf-admin-api/function/response"
 
@@ -9,14 +11,6 @@ import (
 
 // 用户API管理对象
 type Controller struct{}
-
-// 注册请求参数，用于前后端交互参数格式约定
-type CreateUserRequest struct {
-	user.CreateUserInput
-}
-type UpdateUserRequest struct {
-	user.UpdateUserInput
-}
 
 // @summary 用户注册接口
 // @tags    用户服务
@@ -28,13 +22,13 @@ type UpdateUserRequest struct {
 // @router  /user/CreateUser [POST]
 // @success 200 {object} response.JsonResponse "执行结果"
 func (c *Controller) CreateUser(r *ghttp.Request) {
-	var data *CreateUserRequest
+	var data *model.CreateUserReq
 	// 这里没有使用Parse而是仅用GetStruct获取对象，
 	// 数据校验交给后续的service层统一处理
 	if err := r.GetStruct(&data); err != nil {
 		response.JsonExit(r, err.Error())
 	}
-	if err := user.CreateUser(&data.CreateUserInput); err != nil {
+	if err := user.CreateUser(data); err != nil {
 		response.JsonExit(r, err.Error())
 	} else {
 		response.JsonExit(r, "ok")
@@ -145,14 +139,15 @@ func (c *Controller) CheckToken(r *ghttp.Request) {
  * @return:
  */
 func (c *Controller) Update(r *ghttp.Request) {
-	var data *UpdateUserRequest
+	var data *model.UpdateUserReq
 
 	// 这里没有使用Parse而是仅用GetStruct获取对象，
 	// 数据校验交给后续的service层统一处理
 	if err := r.Parse(&data); err != nil {
 		response.JsonExit(r, err.Error())
 	}
-	if err := user.UpdateUser(&data.UpdateUserInput); err != nil {
+	fmt.Println("data:",data)
+	if err := user.UpdateUser(data); err != nil {
 		response.JsonExit(r, err.Error())
 	} else {
 		response.JsonExit(r, "ok")

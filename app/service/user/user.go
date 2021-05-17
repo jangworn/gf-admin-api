@@ -3,40 +3,19 @@ package user
 import (
 	"errors"
 	"fmt"
-	"gf-admin-api/app/model/user"
-	"strconv"
-
+	"gf-admin-api/app/dao"
+	"gf-admin-api/app/model"
 	"github.com/gogf/gf/crypto/gmd5"
-
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gvalid"
+	"strconv"
 )
 
 const (
 	USER_SESSION_MARK = "user_info"
 )
-
-// 注册输入参数
-type CreateUserInput struct {
-	Username   string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
-	Password   string `v:"required|length:6,16#请输入确认密码|密码长度应当在:min到:max之间"`
-	Password2  string `v:"required|length:6,16|same:Password#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等"`
-	Nickname   string
-	CreateTime string
-	Status     int
-}
-
-type UpdateUserInput struct {
-	ID         int
-	Username   string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
-	Password   string `v:"length:6,16#请输入确认密码|密码长度应当在:min到:max之间"`
-	Password2  string `v:"length:6,16|same:Password#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等"`
-	Nickname   string
-	CreateTime string
-	Status     int
-}
 
 type ListInput struct {
 	Page  int
@@ -44,7 +23,7 @@ type ListInput struct {
 }
 
 // 用户注册
-func CreateUser(data *CreateUserInput) error {
+func CreateUser(data *model.CreateUserReq) error {
 	// 输入参数检查
 	if e := gvalid.CheckStruct(data, nil); e != nil {
 		return errors.New(e.FirstString())
@@ -62,14 +41,11 @@ func CreateUser(data *CreateUserInput) error {
 		return errors.New(fmt.Sprintf("昵称 %s 已经存在", data.Nickname))
 	}
 	// 将输入参数赋值到数据库实体对象上
-	var entity *user.Entity
-	if err := gconv.Struct(data, &entity); err != nil {
-		return err
-	}
+
 	// 记录账号创建/注册时间
-	entity.CreateTime = gtime.Now()
-	entity.Password, _ = gmd5.Encrypt(entity.Password)
-	if _, err := user.Insert(entity); err != nil {
+	data.CreateTime = gtime.Now().String()
+	data.Password, _ = gmd5.Encrypt(data.Password)
+	if _, err := dao.User.Save(data); err != nil {
 		return err
 	}
 	return nil
@@ -80,19 +56,19 @@ func IsSignedIn(session *ghttp.Session) bool {
 	return session.Contains(USER_SESSION_MARK)
 }
 
-// 用户登录，成功返回用户信息，否则返回nil; passport应当会md5值字符串
+// 用户登录，成功返回用户信息，否则返回nil; passport应当为md5值字符串
 func SignIn(Username, password string, session *ghttp.Session) (kfId int, err error) {
 	password, _ = gmd5.Encrypt(password)
-	one, err := user.FindOne("username=? and password=?", Username, password)
+	user, err := dao.User.FindOne("username=? and password=?", Username, password)
 
 	if err != nil {
 		return
 	}
-	if one == nil {
+	if user == nil {
 		err = errors.New("账号或密码错误")
 		return
 	}
-	kfId = int(one.ID)
+	kfId = int(user.Id)
 
 	return
 }
@@ -104,7 +80,7 @@ func SignOut(session *ghttp.Session) error {
 
 // 检查账号是否符合规范(目前仅检查唯一性),存在返回false,否则true
 func CheckPassport(Username string) bool {
-	if i, err := user.FindCount("username", Username); err != nil {
+	if i, err := dao.User.FindCount("username", Username); err != nil {
 		return false
 	} else {
 		return i == 0
@@ -113,7 +89,7 @@ func CheckPassport(Username string) bool {
 
 // 检查昵称是否符合规范(目前仅检查唯一性),存在返回false,否则true
 func CheckNickName(nickname string) bool {
-	if i, err := user.FindCount("nickname", nickname); err != nil {
+	if i, err := dao.User.FindCount("nickname", nickname); err != nil {
 		return false
 	} else {
 		return i == 0
@@ -121,18 +97,18 @@ func CheckNickName(nickname string) bool {
 }
 
 // 获得用户信息详情
-func GetProfile(session *ghttp.Session) (u *user.Entity) {
+func GetProfile(session *ghttp.Session) (u *model.User) {
 	_ = session.GetStruct(USER_SESSION_MARK, &u)
 	return
 }
 
-// 获得用户信息详情
-func GetList() (list []*user.Entity) {
-	list, _ = user.FindAll()
+// 获得用户列表
+func GetList() (list []*model.User) {
+	list, _ = dao.User.FindAll()
 	return
 }
 
-func UpdateUser(data *UpdateUserInput) error {
+func UpdateUser(data *model.UpdateUserReq) error {
 	// 输入参数检查
 	if e := gvalid.CheckStruct(data, nil); e != nil {
 		return errors.New(e.FirstString())
@@ -142,27 +118,48 @@ func UpdateUser(data *UpdateUserInput) error {
 		data.Nickname = data.Username
 	}
 
-	// 将输入参数赋值到数据库实体对象上
-	var entity *user.EntityOne
-	if err := gconv.Struct(data, &entity); err != nil {
-		return err
-	}
-	fmt.Println("#########")
-	fmt.Println(data)
-	fmt.Println("###########")
 	// 记录账号创建/注册时间
-
-	m := gconv.Map(entity)
-	delete(m, "create_time")
-	if entity.Password != "" {
-		m["password"], _ = gmd5.Encrypt(m["password"])
+	m := gconv.Map(data)
+	m["UpdateTime"] = gtime.Now().String()
+	delete(m, "Id")
+	if data.Password != "" {
+		m["Password"], _ = gmd5.Encrypt(m["Password"])
 	} else {
-
-		delete(m, "password")
+		delete(m, "Password")
 	}
-
-	if _, err := user.Update(m, "id="+strconv.Itoa(data.ID)); err != nil {
+	fmt.Println("pwd:",m)
+	if _, err := dao.User.Update(m, "id="+strconv.Itoa(data.Id)); err != nil {
 		return err
 	}
 	return nil
+}
+//客服接待：排队中的用户
+func  QueueList() (list []*model.Client,err error){
+	list, err = dao.Client.Where("status=2").Order("latest_time asc").All()
+	return
+}
+
+func ConversationList()(data map[string]interface{},err error) {
+	list, err := dao.Client.Where("status=3 or status =2").Order("latest_time asc").All()
+	if err != nil {
+		fmt.Println("err = ", err)
+		return
+	}
+	data = make(map[string]interface{})
+	var queue []interface{}
+	var conversation []interface{}
+	if len(list) > 0 {
+		for _, v := range list {
+			fmt.Println(v.Status)
+			if status := v.Status; status == 2 {
+				queue = append(queue, v)
+			} else {
+				conversation = append(conversation, v)
+			}
+		}
+	}
+
+	data["queue"] = queue
+	data["conversation"] = conversation
+	return
 }

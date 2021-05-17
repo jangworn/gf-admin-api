@@ -2,8 +2,8 @@ package receive
 
 import (
 	"fmt"
-	"gf-admin-api/app/model/chat_record"
-	"gf-admin-api/app/model/client"
+	"gf-admin-api/app/dao"
+	"gf-admin-api/app/service/user"
 	"gf-admin-api/function/response"
 
 	"github.com/gogf/gf/frame/g"
@@ -19,7 +19,7 @@ type Client struct {
 
 func (c *Controller) GetQueueList(r *ghttp.Request) {
 
-	list, err := client.Model.Where("status=2").OrderBy("latest_time asc").All()
+	list, err := user.QueueList()
 	if err != nil {
 		fmt.Println("err = ", err)
 		return
@@ -28,26 +28,11 @@ func (c *Controller) GetQueueList(r *ghttp.Request) {
 }
 
 func (c *Controller) GetConversationList(r *ghttp.Request) {
-
-	list, err := client.Model.Where("status=3 or status =2").OrderBy("latest_time asc").All()
+	data, err := user.ConversationList()
 	if err != nil {
 		fmt.Println("err = ", err)
 		return
 	}
-	data := make(map[string]interface{})
-	var queue []interface{}
-	var conversation []interface{}
-	if len(list) > 0 {
-		for _, v := range list {
-			if status := v["status"].Int(); status == 2 {
-				queue = append(queue, v)
-			} else {
-				conversation = append(conversation, v)
-			}
-		}
-	}
-	data["queue"] = queue
-	data["conversation"] = conversation
 	response.JsonExit(r, "", data)
 }
 
@@ -57,7 +42,7 @@ func (c *Controller) GetConversationMessage(r *ghttp.Request) {
 	var DataEncryptionKey string
 	DataEncryptionKey = g.Cfg().GetString("server.DataEncryptionKey")
 
-	list, err := chat_record.Model.Fields("id,sender,receiver,aes_decrypt(from_base64(content),'"+DataEncryptionKey+"') as content ,time").Where("sender=?", uid).Or("receiver=?", uid).OrderBy("id desc").Limit(10).All()
+	list, err := dao.ChatRecord.Fields("id,sender,receiver,aes_decrypt(from_base64(content),'"+DataEncryptionKey+"') as content ,time").Where("sender=?", uid).Or("receiver=?", uid).OrderBy("id desc").Limit(10).All()
 	if err != nil {
 		fmt.Println("err = ", err)
 		return
