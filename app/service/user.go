@@ -1,4 +1,4 @@
-package user
+package service
 
 import (
 	"errors"
@@ -17,13 +17,14 @@ const (
 	USER_SESSION_MARK = "user_info"
 )
 
-type ListInput struct {
-	Page  int
-	Limit int
-}
+
+
+var User = userService{}
+
+type userService struct{}
 
 // 用户注册
-func CreateUser(data *model.CreateUserReq) error {
+func (s *userService)CreateUser(data *model.CreateUserReq) error {
 	// 输入参数检查
 	if e := gvalid.CheckStruct(data, nil); e != nil {
 		return errors.New(e.FirstString())
@@ -33,11 +34,11 @@ func CreateUser(data *model.CreateUserReq) error {
 		data.Nickname = data.Username
 	}
 	// 账号唯一性数据检查
-	if !CheckPassport(data.Username) {
+	if !s.CheckPassport(data.Username) {
 		return errors.New(fmt.Sprintf("账号 %s 已经存在", data.Username))
 	}
 	// 昵称唯一性数据检查
-	if !CheckNickName(data.Nickname) {
+	if !s.CheckNickName(data.Nickname) {
 		return errors.New(fmt.Sprintf("昵称 %s 已经存在", data.Nickname))
 	}
 	// 将输入参数赋值到数据库实体对象上
@@ -52,12 +53,12 @@ func CreateUser(data *model.CreateUserReq) error {
 }
 
 // 判断用户是否已经登录
-func IsSignedIn(session *ghttp.Session) bool {
+func (s *userService)IsSignedIn(session *ghttp.Session) bool {
 	return session.Contains(USER_SESSION_MARK)
 }
 
 // 用户登录，成功返回用户信息，否则返回nil; passport应当为md5值字符串
-func SignIn(Username, password string, session *ghttp.Session) (kfId int, err error) {
+func (s *userService)SignIn(Username, password string, session *ghttp.Session) (kfId int, err error) {
 	password, _ = gmd5.Encrypt(password)
 	user, err := dao.User.FindOne("username=? and password=?", Username, password)
 
@@ -79,7 +80,7 @@ func SignOut(session *ghttp.Session) error {
 }
 
 // 检查账号是否符合规范(目前仅检查唯一性),存在返回false,否则true
-func CheckPassport(Username string) bool {
+func (s *userService)CheckPassport(Username string) bool {
 	if i, err := dao.User.FindCount("username", Username); err != nil {
 		return false
 	} else {
@@ -88,7 +89,7 @@ func CheckPassport(Username string) bool {
 }
 
 // 检查昵称是否符合规范(目前仅检查唯一性),存在返回false,否则true
-func CheckNickName(nickname string) bool {
+func (s *userService)CheckNickName(nickname string) bool {
 	if i, err := dao.User.FindCount("nickname", nickname); err != nil {
 		return false
 	} else {
@@ -97,18 +98,18 @@ func CheckNickName(nickname string) bool {
 }
 
 // 获得用户信息详情
-func GetProfile(session *ghttp.Session) (u *model.User) {
+func (s *userService)GetProfile(session *ghttp.Session) (u *model.User) {
 	_ = session.GetStruct(USER_SESSION_MARK, &u)
 	return
 }
 
 // 获得用户列表
-func GetList() (list []*model.User) {
+func (s *userService)GetList() (list []*model.User) {
 	list, _ = dao.User.FindAll()
 	return
 }
 
-func UpdateUser(data *model.UpdateUserReq) error {
+func (s *userService)UpdateUser(data *model.UpdateUserReq) error {
 	// 输入参数检查
 	if e := gvalid.CheckStruct(data, nil); e != nil {
 		return errors.New(e.FirstString())
@@ -134,12 +135,12 @@ func UpdateUser(data *model.UpdateUserReq) error {
 	return nil
 }
 //客服接待：排队中的用户
-func  QueueList() (list []*model.Client,err error){
+func  (s *userService)QueueList() (list []*model.Client,err error){
 	list, err = dao.Client.Where("status=2").Order("latest_time asc").All()
 	return
 }
 
-func ConversationList()(data map[string]interface{},err error) {
+func (s *userService)ConversationList()(data map[string]interface{},err error) {
 	list, err := dao.Client.Where("status=3 or status =2").Order("latest_time asc").All()
 	if err != nil {
 		fmt.Println("err = ", err)

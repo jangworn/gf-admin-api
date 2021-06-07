@@ -1,25 +1,21 @@
-package receive
+package api
 
 import (
 	"fmt"
 	"gf-admin-api/app/dao"
-	"gf-admin-api/app/service/user"
+	"gf-admin-api/app/service"
 	"gf-admin-api/function/response"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 )
+var Receiver = new(receiveController)
+type receiveController struct{}
 
-type Controller struct{}
 
-type Client struct {
-	Uid        string `json:"uid"`
-	LatestTime string `json:"latestTime"`
-}
+func (c *receiveController) GetQueueList(r *ghttp.Request) {
 
-func (c *Controller) GetQueueList(r *ghttp.Request) {
-
-	list, err := user.QueueList()
+	list, err := service.User.QueueList()
 	if err != nil {
 		fmt.Println("err = ", err)
 		return
@@ -27,8 +23,8 @@ func (c *Controller) GetQueueList(r *ghttp.Request) {
 	response.JsonExit(r, "", list)
 }
 
-func (c *Controller) GetConversationList(r *ghttp.Request) {
-	data, err := user.ConversationList()
+func (c *receiveController) GetConversationList(r *ghttp.Request) {
+	data, err := service.User.ConversationList()
 	if err != nil {
 		fmt.Println("err = ", err)
 		return
@@ -36,7 +32,7 @@ func (c *Controller) GetConversationList(r *ghttp.Request) {
 	response.JsonExit(r, "", data)
 }
 
-func (c *Controller) GetConversationMessage(r *ghttp.Request) {
+func (c *receiveController) GetConversationMessage(r *ghttp.Request) {
 
 	uid := r.Get("uid")
 	var DataEncryptionKey string

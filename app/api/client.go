@@ -1,15 +1,16 @@
-package client
+package api
 
 import (
 	"fmt"
-	"gf-admin-api/app/service/client"
+	"gf-admin-api/app/service"
 	"gf-admin-api/function/response"
 	"github.com/gogf/gf/net/ghttp"
 	"log"
 )
 
 // 客户端API管理对象
-type Controller struct{}
+var Clienter = new(clientController)
+type clientController struct{}
 
 
 /**
@@ -20,10 +21,10 @@ type Controller struct{}
  * @router: /client/list [GET]
  * @return:
  */
-func (c *Controller) List(r *ghttp.Request) {
+func (c *clientController) List(r *ghttp.Request) {
 	//page := r.Get("page")
 	//limit := r.Get("limit")
-	response.JsonExit(r, "", client.GetList())
+	response.JsonExit(r, "", service.Client.GetList())
 }
 
 /**
@@ -34,10 +35,10 @@ func (c *Controller) List(r *ghttp.Request) {
  * @router: /client/friendship [GET]
  * @return:
  */
-func (c *Controller) Friendship(r *ghttp.Request){
+func (c *clientController) Friendship(r *ghttp.Request){
 	respondent := r.GetString("respondent")
 	status := r.GetInt("status")
-	response.JsonExit(r,"",client.GetFriendship(respondent,status))
+	response.JsonExit(r,"", service.Client.GetFriendship(respondent,status))
 }
 
 /**
@@ -48,12 +49,12 @@ func (c *Controller) Friendship(r *ghttp.Request){
  * @router: /client/aggree [POST]
  * @return:
  */
-func (c *Controller) Aggree(r *ghttp.Request){
+func (c *clientController) Aggree(r *ghttp.Request){
 	id := r.GetInt("id")
 	respondent := r.GetString("respondent")
-	f := client.GetFriendshipOne(id)
+	f := service.Client.GetFriendshipOne(id)
 	if f.Respondent == respondent {
-		err := client.UpdateFriendship(id,1)
+		err := service.Client.UpdateFriendship(id,1)
 		fmt.Println("更新状态：",err)
 		if err != nil{
 			response.JsonExit(r,"操作失败")
@@ -71,12 +72,12 @@ func (c *Controller) Aggree(r *ghttp.Request){
  * @router: /client/unfriend [POST]
  * @return:
  */
-func (c *Controller) Unfriend(r *ghttp.Request){
+func (c *clientController) Unfriend(r *ghttp.Request){
 	id := r.GetInt("id")
 	respondent := r.GetString("respondent")
-	f := client.GetFriendshipOne(id)
+	f := service.Client.GetFriendshipOne(id)
 	if f.Respondent == respondent {
-		err := client.UpdateFriendship(id,2)
+		err := service.Client.UpdateFriendship(id,2)
 		fmt.Println("更新状态：",err)
 		if err != nil{
 			response.JsonExit(r,"操作失败")
@@ -94,15 +95,15 @@ func (c *Controller) Unfriend(r *ghttp.Request){
  * @router: /client/createChatroom [POST]
  * @return:
  */
-func (c *Controller) CreateChatroom(r *ghttp.Request){
+func (c *clientController) CreateChatroom(r *ghttp.Request){
 	uid := r.GetString("uid")
 	checkedFriends := r.GetArray("checkedFriends")
 	fmt.Println(uid,checkedFriends)
-	room_id,err := client.CreateChatroom()
+	room_id,err := service.Client.CreateChatroom()
 	if err != nil{
 		log.Fatalf("创建聊天室失败：%s",err)
 	}
-	client.InsertChatroomClient(uid,room_id,checkedFriends)
+	service.Client.InsertChatroomClient(uid,room_id,checkedFriends)
 
 	response.JsonExit(r,"")
 }
@@ -115,9 +116,9 @@ func (c *Controller) CreateChatroom(r *ghttp.Request){
  * @router: /client/getChatroomList [GET]
  * @return:
  */
-func (c *Controller) GetChatroomList(r *ghttp.Request){
+func (c *clientController) GetChatroomList(r *ghttp.Request){
 	uid := r.GetString("uid")
-	response.JsonExit(r,"",client.GetChatroomList(uid))
+	response.JsonExit(r,"", service.Client.GetChatroomList(uid))
 }
 
 

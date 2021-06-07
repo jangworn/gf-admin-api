@@ -1,16 +1,17 @@
-package user
+package api
 
 import (
 	"fmt"
 	"gf-admin-api/app/model"
-	"gf-admin-api/app/service/user"
+	"gf-admin-api/app/service"
 	"gf-admin-api/function/response"
 
 	"github.com/gogf/gf/net/ghttp"
 )
 
 // 用户API管理对象
-type Controller struct{}
+var User = new(userController)
+type userController struct{}
 
 // @summary 用户注册接口
 // @tags    用户服务
@@ -21,14 +22,14 @@ type Controller struct{}
 // @param   nickname  formData string false "用户昵称"
 // @router  /user/CreateUser [POST]
 // @success 200 {object} response.JsonResponse "执行结果"
-func (c *Controller) CreateUser(r *ghttp.Request) {
+func (c *userController) CreateUser(r *ghttp.Request) {
 	var data *model.CreateUserReq
 	// 这里没有使用Parse而是仅用GetStruct获取对象，
 	// 数据校验交给后续的service层统一处理
 	if err := r.GetStruct(&data); err != nil {
 		response.JsonExit(r, err.Error())
 	}
-	if err := user.CreateUser(data); err != nil {
+	if err := service.User.CreateUser(data); err != nil {
 		response.JsonExit(r, err.Error())
 	} else {
 		response.JsonExit(r, "ok")
@@ -46,8 +47,8 @@ type SignInRequest struct {
 // @produce json
 // @router  /user/issignedin [GET]
 // @success 200 {object} response.JsonResponse "执行结果:`true/false`"
-func (c *Controller) IsSignedIn(r *ghttp.Request) {
-	response.JsonExit(r, "", user.IsSignedIn(r.Session))
+func (c *userController) IsSignedIn(r *ghttp.Request) {
+	response.JsonExit(r, "", service.User.IsSignedIn(r.Session))
 }
 
 // 账号唯一性检测请求参数，用于前后端交互参数格式约定
@@ -61,12 +62,12 @@ type CheckPassportRequest struct {
 // @param   passport query string true "用户账号"
 // @router  /user/checkpassport [GET]
 // @success 200 {object} response.JsonResponse "执行结果:`true/false`"
-func (c *Controller) CheckPassport(r *ghttp.Request) {
+func (c *userController) CheckPassport(r *ghttp.Request) {
 	var data *CheckPassportRequest
 	if err := r.Parse(&data); err != nil {
 		response.JsonExit(r, err.Error())
 	}
-	if data.Username != "" && !user.CheckPassport(data.Username) {
+	if data.Username != "" && !service.User.CheckPassport(data.Username) {
 		response.JsonExit(r, "账号已经存在", false)
 	}
 	response.JsonExit(r, "", true)
@@ -83,12 +84,12 @@ type CheckNickNameRequest struct {
 // @param   nickname query string true "用户昵称"
 // @router  /user/checkpassport [GET]
 // @success 200 {object} response.JsonResponse "执行结果"
-func (c *Controller) CheckNickName(r *ghttp.Request) {
+func (c *userController) CheckNickName(r *ghttp.Request) {
 	var data *CheckNickNameRequest
 	if err := r.Parse(&data); err != nil {
 		response.JsonExit(r, err.Error())
 	}
-	if data.Nickname != "" && !user.CheckNickName(data.Nickname) {
+	if data.Nickname != "" && !service.User.CheckNickName(data.Nickname) {
 		response.JsonExit(r, "昵称已经存在", false)
 	}
 	response.JsonExit(r, "ok", true)
@@ -99,8 +100,8 @@ func (c *Controller) CheckNickName(r *ghttp.Request) {
 // @produce json
 // @router  /user/profile [GET]
 // @success 200 {object} user.Entity "用户信息"
-func (c *Controller) Profile(r *ghttp.Request) {
-	response.JsonExit(r, "", user.GetProfile(r.Session))
+func (c *userController) Profile(r *ghttp.Request) {
+	response.JsonExit(r, "", service.User.GetProfile(r.Session))
 }
 
 /**
@@ -111,10 +112,10 @@ func (c *Controller) Profile(r *ghttp.Request) {
  * @router: /user/profile [GET]
  * @return:
  */
-func (c *Controller) List(r *ghttp.Request) {
+func (c *userController) List(r *ghttp.Request) {
 	//page := r.Get("page")
 	//limit := r.Get("limit")
-	response.JsonExit(r, "", user.GetList())
+	response.JsonExit(r, "", service.User.GetList())
 }
 
 /**
@@ -125,7 +126,7 @@ func (c *Controller) List(r *ghttp.Request) {
  * @router: /user/checktoken [GET]
  * @return:
  */
-func (c *Controller) CheckToken(r *ghttp.Request) {
+func (c *userController) CheckToken(r *ghttp.Request) {
 	//token := r.Get("token")
 	response.JsonExit(r, "", "123")
 }
@@ -138,7 +139,7 @@ func (c *Controller) CheckToken(r *ghttp.Request) {
  * @router: /user/update [POST]
  * @return:
  */
-func (c *Controller) Update(r *ghttp.Request) {
+func (c *userController) Update(r *ghttp.Request) {
 	var data *model.UpdateUserReq
 
 	// 这里没有使用Parse而是仅用GetStruct获取对象，
@@ -147,7 +148,7 @@ func (c *Controller) Update(r *ghttp.Request) {
 		response.JsonExit(r, err.Error())
 	}
 	fmt.Println("data:",data)
-	if err := user.UpdateUser(data); err != nil {
+	if err := service.User.UpdateUser(data); err != nil {
 		response.JsonExit(r, err.Error())
 	} else {
 		response.JsonExit(r, "ok")

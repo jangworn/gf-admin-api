@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"gf-admin-api/app/service/user"
+	"gf-admin-api/app/service"
 
 	jwt "github.com/gogf/gf-jwt"
 	"github.com/gogf/gf/frame/g"
@@ -128,7 +128,7 @@ func Authenticator(r *ghttp.Request) (interface{}, error) {
 		return "", errors.New("incorrect Username or Password")
 	}
 
-	if kfId, err := user.SignIn(data["username"].(string), data["password"].(string), r.Session); err != nil {
+	if kfId, err := service.User.SignIn(data["username"].(string), data["password"].(string), r.Session); err != nil {
 		return "", jwt.ErrFailedAuthentication
 	} else {
 		return g.Map{

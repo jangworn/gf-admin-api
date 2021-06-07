@@ -1,4 +1,4 @@
-package client
+package service
 
 import (
 	"gf-admin-api/app/dao"
@@ -16,28 +16,34 @@ type ListInput struct {
 	Limit int
 }
 
+var Client = clientService{}
+
+type clientService struct {
+
+}
+
 // 获得客户列表
-func GetList() (list []*model.Client) {
+func (s *clientService)GetList() (list []*model.Client) {
 	list, _ = dao.Client.FindAll()
 	return
 }
 
-func GetFriendship(respondent string,status int) (list []*model.Friendship){
+func (s *clientService)GetFriendship(respondent string,status int) (list []*model.Friendship){
 	list, _ = dao.Friendship.FindAll("respondent=? and status=?",respondent,status)
 	return
 }
 
-func GetFriendshipOne(id int) (one *model.Friendship){
+func (s *clientService)GetFriendshipOne(id int) (one *model.Friendship){
 	one, _ = dao.Friendship.FindOne("id=?",id)
 	return
 }
 
-func UpdateFriendship(id,status int) (err error){
+func (s *clientService)UpdateFriendship(id,status int) (err error){
 	_, err = dao.Friendship.Update(g.Map{"status":status},"id=?",id)
 	return
 }
 
-func CreateChatroom() (lastInsertId int64,err error) {
+func (s *clientService)CreateChatroom() (lastInsertId int64,err error) {
 	res,err := dao.Chatroom.Insert(g.Map{"name":"群聊","create_time":gtime.Datetime()})
 	if err != nil{
 		log.Fatalf("创建聊天室失败:%s",err)
@@ -48,7 +54,7 @@ func CreateChatroom() (lastInsertId int64,err error) {
 	return lastInsertId,nil
 }
 
-func InsertChatroomClient(owner string,room_id int64,checkedClient []string) (err error){
+func (s *clientService)InsertChatroomClient(owner string,room_id int64,checkedClient []string) (err error){
 
 	if len(checkedClient) == 0 {
 			return gerror.New("参数错误")
@@ -62,7 +68,7 @@ func InsertChatroomClient(owner string,room_id int64,checkedClient []string) (er
 	return nil
 }
 
-func GetChatroomList(uid string) (list []*model.Chatroom){
+func (s *clientService)GetChatroomList(uid string) (list []*model.Chatroom){
 	list, _ = dao.Chatroom.LeftJoin("chatroom_client cc","chatroom.id = cc.room_id").Fields("chatroom.id,name").Where("cc.uid=?",uid).And("chatroom.id>?",1).FindAll()
 	var item = &model.Chatroom{Id:1,Name:"公共聊天室"}
 	list = append([]*model.Chatroom{item},list...)
