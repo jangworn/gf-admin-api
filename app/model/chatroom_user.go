@@ -8,7 +8,11 @@ import (
 	"gf-admin-api/app/model/internal"
 )
 
-// ChatroomClient is the golang structure for table chatroom_client.
-type ChatroomClient internal.ChatroomClient
+// ChatroomUser is the golang structure for table chatroom_user.
+type ChatroomUser internal.ChatroomUser
 
+type ChatroomReq struct {
+	UserId int
+	CheckedFriends []int
+}
 // Fill with you ideas below.

@@ -5,111 +5,22 @@ import (
 	"gf-admin-api/app/model"
 	"gf-admin-api/app/service"
 	"gf-admin-api/function/response"
-
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"log"
 )
 
-// 用户API管理对象
+// 客户端API管理对象
 var User = new(userController)
 type userController struct{}
 
-// @summary 用户注册接口
-// @tags    用户服务
-// @produce json
-// @param   passport  formData string  true "用户账号名称"
-// @param   password  formData string  true "用户密码"
-// @param   password2 formData string  true "确认密码"
-// @param   nickname  formData string false "用户昵称"
-// @router  /user/CreateUser [POST]
-// @success 200 {object} response.JsonResponse "执行结果"
-func (c *userController) CreateUser(r *ghttp.Request) {
-	var data *model.CreateUserReq
-	// 这里没有使用Parse而是仅用GetStruct获取对象，
-	// 数据校验交给后续的service层统一处理
-	if err := r.GetStruct(&data); err != nil {
-		response.JsonExit(r, err.Error())
-	}
-	if err := service.User.CreateUser(data); err != nil {
-		response.JsonExit(r, err.Error())
-	} else {
-		response.JsonExit(r, "ok")
-	}
-}
-
-// 登录请求参数，用于前后端交互参数格式约定
-type SignInRequest struct {
-	Username string `v:"required#账号不能为空"`
-	Password string `v:"required#密码不能为空"`
-}
-
-// @summary 判断用户是否已经登录
-// @tags    用户服务
-// @produce json
-// @router  /user/issignedin [GET]
-// @success 200 {object} response.JsonResponse "执行结果:`true/false`"
-func (c *userController) IsSignedIn(r *ghttp.Request) {
-	response.JsonExit(r, "", service.User.IsSignedIn(r.Session))
-}
-
-// 账号唯一性检测请求参数，用于前后端交互参数格式约定
-type CheckPassportRequest struct {
-	Username string
-}
-
-// @summary 检测用户账号接口(唯一性校验)
-// @tags    用户服务
-// @produce json
-// @param   passport query string true "用户账号"
-// @router  /user/checkpassport [GET]
-// @success 200 {object} response.JsonResponse "执行结果:`true/false`"
-func (c *userController) CheckPassport(r *ghttp.Request) {
-	var data *CheckPassportRequest
-	if err := r.Parse(&data); err != nil {
-		response.JsonExit(r, err.Error())
-	}
-	if data.Username != "" && !service.User.CheckPassport(data.Username) {
-		response.JsonExit(r, "账号已经存在", false)
-	}
-	response.JsonExit(r, "", true)
-}
-
-// 账号唯一性检测请求参数，用于前后端交互参数格式约定
-type CheckNickNameRequest struct {
-	Nickname string
-}
-
-// @summary 检测用户昵称接口(唯一性校验)
-// @tags    用户服务
-// @produce json
-// @param   nickname query string true "用户昵称"
-// @router  /user/checkpassport [GET]
-// @success 200 {object} response.JsonResponse "执行结果"
-func (c *userController) CheckNickName(r *ghttp.Request) {
-	var data *CheckNickNameRequest
-	if err := r.Parse(&data); err != nil {
-		response.JsonExit(r, err.Error())
-	}
-	if data.Nickname != "" && !service.User.CheckNickName(data.Nickname) {
-		response.JsonExit(r, "昵称已经存在", false)
-	}
-	response.JsonExit(r, "ok", true)
-}
-
-// @summary 获取用户详情信息
-// @tags    用户服务
-// @produce json
-// @router  /user/profile [GET]
-// @success 200 {object} user.Entity "用户信息"
-func (c *userController) Profile(r *ghttp.Request) {
-	response.JsonExit(r, "", service.User.GetProfile(r.Session))
-}
 
 /**
- * @summary:
+ * @summary: 客户端列表，后台展示
  * @tags:
  * @produce: json
  * @param {type}
- * @router: /user/profile [GET]
+ * @router: /client/list [GET]
  * @return:
  */
 func (c *userController) List(r *ghttp.Request) {
@@ -118,39 +29,133 @@ func (c *userController) List(r *ghttp.Request) {
 	response.JsonExit(r, "", service.User.GetList())
 }
 
-/**
- * @summary: 更新用户信息
- * @tags: 用户
- * @produce: json
- * @param {type}
- * @router: /user/checktoken [GET]
- * @return:
- */
-func (c *userController) CheckToken(r *ghttp.Request) {
-	//token := r.Get("token")
-	response.JsonExit(r, "", "123")
+func (c *userController) SignIn(r *ghttp.Request){
+	var (
+		data *model.UserReq
+	)
+	if err := r.Parse(&data);err != nil{
+		response.JsonExit(r,  err.Error())
+	}
+	user,err := service.User.SignIn(data.Nickname)
+	if err != nil{
+		g.Log().Line().Println(err)
+	}
+	fmt.Println("u:",user)
+	if user == nil {
+		fmt.Println("u2:",user)
+		user = service.User.SignUp(data.Nickname)
+		fmt.Println("u3:",user)
+	}
+	response.JsonExit(r,"", user)
 }
 
 /**
- * @summary: 更新用户信息
- * @tags: 用户
+ * @summary: 好友申请列表
+ * @tags:
  * @produce: json
  * @param {type}
- * @router: /user/update [POST]
+ * @router: /client/friendship [GET]
  * @return:
  */
-func (c *userController) Update(r *ghttp.Request) {
-	var data *model.UpdateUserReq
-
-	// 这里没有使用Parse而是仅用GetStruct获取对象，
-	// 数据校验交给后续的service层统一处理
+func (c *userController) Friendship(r *ghttp.Request){
+	var (
+		data *model.FriendshipReq
+	)
 	if err := r.Parse(&data); err != nil {
-		response.JsonExit(r, err.Error())
+		response.JsonExit(r,  err.Error())
 	}
-	fmt.Println("data:",data)
-	if err := service.User.UpdateUser(data); err != nil {
-		response.JsonExit(r, err.Error())
-	} else {
-		response.JsonExit(r, "ok")
-	}
+	response.JsonExit(r,"", service.User.GetFriendship(data.UserId,data.Status))
 }
+
+/**
+ * @summary: 同意好友申请
+ * @tags:
+ * @produce: json
+ * @param {type}
+ * @router: /client/aggree [POST]
+ * @return:
+ */
+func (c *userController) Aggree(r *ghttp.Request){
+	var (
+		data *model.FriendshipReq
+	)
+	if err := r.Parse(&data); err != nil {
+		response.JsonExit(r,  err.Error())
+	}
+	f := service.User.GetFriendshipOne(data.Id)
+	if f.RespondentId == data.UserId {
+		err := service.User.UpdateFriendship(data.Id,1)
+		fmt.Println("更新状态：",err)
+		if err != nil{
+			response.JsonExit(r,"操作失败")
+		}
+		response.JsonExit(r,"")
+	}
+	response.JsonExit(r,"参数错误")
+}
+
+/**
+ * @summary: 删除好友
+ * @tags:
+ * @produce: json
+ * @param {type}
+ * @router: /client/unfriend [POST]
+ * @return:
+ */
+func (c *userController) Unfriend(r *ghttp.Request){
+	var (
+		data *model.FriendshipReq
+	)
+	if err := r.Parse(&data); err != nil {
+		response.JsonExit(r,  err.Error())
+	}
+	f := service.User.GetFriendshipOne(data.Id)
+	if f.RespondentId == data.UserId  || f.ApplicantId == data.UserId{
+		err := service.User.UpdateFriendship(data.Id,2)
+		fmt.Println("更新状态：",err)
+		if err != nil{
+			response.JsonExit(r,"操作失败")
+		}
+		response.JsonExit(r,"")
+	}
+	response.JsonExit(r,"参数错误")
+}
+
+/**
+ * @summary: 创建群聊
+ * @tags:
+ * @produce: json
+ * @param {type}
+ * @router: /client/createChatroom [POST]
+ * @return:
+ */
+func (c *userController) CreateChatroom(r *ghttp.Request){
+	var (
+		data *model.ChatroomReq
+	)
+	if err := r.Parse(&data); err != nil {
+		response.JsonExit(r,  err.Error())
+	}
+	room_id,err := service.User.CreateChatroom()
+	if err != nil{
+		log.Fatalf("创建聊天室失败：%s",err)
+	}
+	service.User.InsertChatroomUser(data.UserId,room_id,data.CheckedFriends)
+
+	response.JsonExit(r,"")
+}
+
+/**
+ * @summary: 群聊列表
+ * @tags:
+ * @produce: json
+ * @param {type}
+ * @router: /client/getChatroomList [GET]
+ * @return:
+ */
+func (c *userController) GetChatroomList(r *ghttp.Request){
+	uid := r.GetString("uid")
+	response.JsonExit(r,"", service.User.GetChatroomList(uid))
+}
+
+

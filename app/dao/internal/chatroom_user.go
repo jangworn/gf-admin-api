@@ -15,40 +15,40 @@ import (
 	"gf-admin-api/app/model"
 )
 
-// ClientDao is the manager for logic model data accessing
+// ChatroomUserDao is the manager for logic model data accessing
 // and custom defined data operations functions management.
-type ClientDao struct {
+type ChatroomUserDao struct {
 	gmvc.M
 	DB      gdb.DB
 	Table   string
-	Columns clientColumns
+	Columns chatroomUserColumns
 }
 
-// ClientColumns defines and stores column names for table client.
-type clientColumns struct {
-	Id         string // 自增
-	Name       string // 客户名称
-	KfId       string // 接到客服id
-	LatestTime string // 最新消息时间
-	Uid        string // 客户唯一id
-	JoinTime   string // 加入时间
-	Status     string // 对话状态（1：机器人，2：排队中，3：人工对话）
+// ChatroomUserColumns defines and stores column names for table chatroom_user.
+type chatroomUserColumns struct {
+	Id         string // id
+	RoomId     string // 群聊房间id
+	UserId     string // 用户id
+	Nickname   string // 用户在群内昵称
+	IsOwner    string // 是否是群主
+	CreateTime string // 创建时间
+	UpdateTime string // 更新时间
 }
 
 var (
-	// Client is globally public accessible object for table client operations.
-	Client = ClientDao{
-		M:     g.DB("default").Model("client").Safe(),
+	// ChatroomUser is globally public accessible object for table chatroom_user operations.
+	ChatroomUser = ChatroomUserDao{
+		M:     g.DB("default").Model("chatroom_user").Safe(),
 		DB:    g.DB("default"),
-		Table: "client",
-		Columns: clientColumns{
+		Table: "chatroom_user",
+		Columns: chatroomUserColumns{
 			Id:         "id",
-			Name:       "name",
-			KfId:       "kf_id",
-			LatestTime: "latest_time",
-			Uid:        "uid",
-			JoinTime:   "join_time",
-			Status:     "status",
+			RoomId:     "room_id",
+			UserId:     "user_id",
+			Nickname:   "nickname",
+			IsOwner:    "is_owner",
+			CreateTime: "create_time",
+			UpdateTime: "update_time",
 		},
 	}
 )
@@ -57,34 +57,34 @@ var (
 // of current DB object and with given context in it.
 // Note that this returned DB object can be used only once, so do not assign it to
 // a global or package variable for long using.
-func (d *ClientDao) Ctx(ctx context.Context) *ClientDao {
-	return &ClientDao{M: d.M.Ctx(ctx)}
+func (d *ChatroomUserDao) Ctx(ctx context.Context) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Ctx(ctx)}
 }
 
 // As sets an alias name for current table.
-func (d *ClientDao) As(as string) *ClientDao {
-	return &ClientDao{M: d.M.As(as)}
+func (d *ChatroomUserDao) As(as string) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.As(as)}
 }
 
 // TX sets the transaction for current operation.
-func (d *ClientDao) TX(tx *gdb.TX) *ClientDao {
-	return &ClientDao{M: d.M.TX(tx)}
+func (d *ChatroomUserDao) TX(tx *gdb.TX) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.TX(tx)}
 }
 
 // Master marks the following operation on master node.
-func (d *ClientDao) Master() *ClientDao {
-	return &ClientDao{M: d.M.Master()}
+func (d *ChatroomUserDao) Master() *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Master()}
 }
 
 // Slave marks the following operation on slave node.
 // Note that it makes sense only if there's any slave node configured.
-func (d *ClientDao) Slave() *ClientDao {
-	return &ClientDao{M: d.M.Slave()}
+func (d *ChatroomUserDao) Slave() *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Slave()}
 }
 
 // Args sets custom arguments for model operation.
-func (d *ClientDao) Args(args ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.Args(args...)}
+func (d *ChatroomUserDao) Args(args ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Args(args...)}
 }
 
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
@@ -92,8 +92,8 @@ func (d *ClientDao) Args(args ...interface{}) *ClientDao {
 // and also with its alias name, like:
 // Table("user").LeftJoin("user_detail", "user_detail.uid=user.uid")
 // Table("user", "u").LeftJoin("user_detail", "ud", "ud.uid=u.uid")
-func (d *ClientDao) LeftJoin(table ...string) *ClientDao {
-	return &ClientDao{M: d.M.LeftJoin(table...)}
+func (d *ChatroomUserDao) LeftJoin(table ...string) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.LeftJoin(table...)}
 }
 
 // RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
@@ -101,8 +101,8 @@ func (d *ClientDao) LeftJoin(table ...string) *ClientDao {
 // and also with its alias name, like:
 // Table("user").RightJoin("user_detail", "user_detail.uid=user.uid")
 // Table("user", "u").RightJoin("user_detail", "ud", "ud.uid=u.uid")
-func (d *ClientDao) RightJoin(table ...string) *ClientDao {
-	return &ClientDao{M: d.M.RightJoin(table...)}
+func (d *ChatroomUserDao) RightJoin(table ...string) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.RightJoin(table...)}
 }
 
 // InnerJoin does "INNER JOIN ... ON ..." statement on the model.
@@ -110,36 +110,36 @@ func (d *ClientDao) RightJoin(table ...string) *ClientDao {
 // and also with its alias name, like:
 // Table("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Table("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
-func (d *ClientDao) InnerJoin(table ...string) *ClientDao {
-	return &ClientDao{M: d.M.InnerJoin(table...)}
+func (d *ChatroomUserDao) InnerJoin(table ...string) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.InnerJoin(table...)}
 }
 
 // Fields sets the operation fields of the model, multiple fields joined using char ','.
 // The parameter <fieldNamesOrMapStruct> can be type of string/map/*map/struct/*struct.
-func (d *ClientDao) Fields(fieldNamesOrMapStruct ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.Fields(fieldNamesOrMapStruct...)}
+func (d *ChatroomUserDao) Fields(fieldNamesOrMapStruct ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Fields(fieldNamesOrMapStruct...)}
 }
 
 // FieldsEx sets the excluded operation fields of the model, multiple fields joined using char ','.
 // The parameter <fieldNamesOrMapStruct> can be type of string/map/*map/struct/*struct.
-func (d *ClientDao) FieldsEx(fieldNamesOrMapStruct ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.FieldsEx(fieldNamesOrMapStruct...)}
+func (d *ChatroomUserDao) FieldsEx(fieldNamesOrMapStruct ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.FieldsEx(fieldNamesOrMapStruct...)}
 }
 
 // Option sets the extra operation option for the model.
-func (d *ClientDao) Option(option int) *ClientDao {
-	return &ClientDao{M: d.M.Option(option)}
+func (d *ChatroomUserDao) Option(option int) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Option(option)}
 }
 
 // OmitEmpty sets OPTION_OMITEMPTY option for the model, which automatically filers
 // the data and where attributes for empty values.
-func (d *ClientDao) OmitEmpty() *ClientDao {
-	return &ClientDao{M: d.M.OmitEmpty()}
+func (d *ChatroomUserDao) OmitEmpty() *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.OmitEmpty()}
 }
 
 // Filter marks filtering the fields which does not exist in the fields of the operated table.
-func (d *ClientDao) Filter() *ClientDao {
-	return &ClientDao{M: d.M.Filter()}
+func (d *ChatroomUserDao) Filter() *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Filter()}
 }
 
 // Where sets the condition statement for the model. The parameter <where> can be type of
@@ -153,8 +153,8 @@ func (d *ClientDao) Filter() *ClientDao {
 // Where("status IN (?)", g.Slice{1,2,3})
 // Where("age IN(?,?)", 18, 50)
 // Where(User{ Id : 1, UserName : "john"})
-func (d *ClientDao) Where(where interface{}, args ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.Where(where, args...)}
+func (d *ChatroomUserDao) Where(where interface{}, args ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Where(where, args...)}
 }
 
 // WherePri does the same logic as M.Where except that if the parameter <where>
@@ -162,54 +162,54 @@ func (d *ClientDao) Where(where interface{}, args ...interface{}) *ClientDao {
 // key value. That is, if primary key is "id" and given <where> parameter as "123", the
 // WherePri function treats the condition as "id=123", but M.Where treats the condition
 // as string "123".
-func (d *ClientDao) WherePri(where interface{}, args ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.WherePri(where, args...)}
+func (d *ChatroomUserDao) WherePri(where interface{}, args ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.WherePri(where, args...)}
 }
 
 // And adds "AND" condition to the where statement.
-func (d *ClientDao) And(where interface{}, args ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.And(where, args...)}
+func (d *ChatroomUserDao) And(where interface{}, args ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.And(where, args...)}
 }
 
 // Or adds "OR" condition to the where statement.
-func (d *ClientDao) Or(where interface{}, args ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.Or(where, args...)}
+func (d *ChatroomUserDao) Or(where interface{}, args ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Or(where, args...)}
 }
 
 // Group sets the "GROUP BY" statement for the model.
-func (d *ClientDao) Group(groupBy string) *ClientDao {
-	return &ClientDao{M: d.M.Group(groupBy)}
+func (d *ChatroomUserDao) Group(groupBy string) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Group(groupBy)}
 }
 
 // Order sets the "ORDER BY" statement for the model.
-func (d *ClientDao) Order(orderBy ...string) *ClientDao {
-	return &ClientDao{M: d.M.Order(orderBy...)}
+func (d *ChatroomUserDao) Order(orderBy ...string) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Order(orderBy...)}
 }
 
 // Limit sets the "LIMIT" statement for the model.
 // The parameter <limit> can be either one or two number, if passed two number is passed,
 // it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
 // statement.
-func (d *ClientDao) Limit(limit ...int) *ClientDao {
-	return &ClientDao{M: d.M.Limit(limit...)}
+func (d *ChatroomUserDao) Limit(limit ...int) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Limit(limit...)}
 }
 
 // Offset sets the "OFFSET" statement for the model.
 // It only makes sense for some databases like SQLServer, PostgreSQL, etc.
-func (d *ClientDao) Offset(offset int) *ClientDao {
-	return &ClientDao{M: d.M.Offset(offset)}
+func (d *ChatroomUserDao) Offset(offset int) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Offset(offset)}
 }
 
 // Page sets the paging number for the model.
 // The parameter <page> is started from 1 for paging.
 // Note that, it differs that the Limit function start from 0 for "LIMIT" statement.
-func (d *ClientDao) Page(page, limit int) *ClientDao {
-	return &ClientDao{M: d.M.Page(page, limit)}
+func (d *ChatroomUserDao) Page(page, limit int) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Page(page, limit)}
 }
 
 // Batch sets the batch operation number for the model.
-func (d *ClientDao) Batch(batch int) *ClientDao {
-	return &ClientDao{M: d.M.Batch(batch)}
+func (d *ChatroomUserDao) Batch(batch int) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Batch(batch)}
 }
 
 // Cache sets the cache feature for the model. It caches the result of the sql, which means
@@ -224,8 +224,8 @@ func (d *ClientDao) Batch(batch int) *ClientDao {
 // control the cache like changing the <duration> or clearing the cache with specified <name>.
 //
 // Note that, the cache feature is disabled if the model is operating on a transaction.
-func (d *ClientDao) Cache(duration time.Duration, name ...string) *ClientDao {
-	return &ClientDao{M: d.M.Cache(duration, name...)}
+func (d *ChatroomUserDao) Cache(duration time.Duration, name ...string) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Cache(duration, name...)}
 }
 
 // Data sets the operation data for the model.
@@ -235,39 +235,39 @@ func (d *ClientDao) Cache(duration time.Duration, name ...string) *ClientDao {
 // Data("uid", 10000)
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
-func (d *ClientDao) Data(data ...interface{}) *ClientDao {
-	return &ClientDao{M: d.M.Data(data...)}
+func (d *ChatroomUserDao) Data(data ...interface{}) *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Data(data...)}
 }
 
 // All does "SELECT FROM ..." statement for the model.
-// It retrieves the records from table and returns the result as []*model.Client.
+// It retrieves the records from table and returns the result as []*model.ChatroomUser.
 // It returns nil if there's no record retrieved with the given conditions from table.
 //
 // The optional parameter <where> is the same as the parameter of M.Where function,
 // see M.Where.
-func (d *ClientDao) All(where ...interface{}) ([]*model.Client, error) {
+func (d *ChatroomUserDao) All(where ...interface{}) ([]*model.ChatroomUser, error) {
 	all, err := d.M.All(where...)
 	if err != nil {
 		return nil, err
 	}
-	var entities []*model.Client
+	var entities []*model.ChatroomUser
 	if err = all.Structs(&entities); err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
 	return entities, nil
 }
 
-// One retrieves one record from table and returns the result as *model.Client.
+// One retrieves one record from table and returns the result as *model.ChatroomUser.
 // It returns nil if there's no record retrieved with the given conditions from table.
 //
 // The optional parameter <where> is the same as the parameter of M.Where function,
 // see M.Where.
-func (d *ClientDao) One(where ...interface{}) (*model.Client, error) {
+func (d *ChatroomUserDao) One(where ...interface{}) (*model.ChatroomUser, error) {
 	one, err := d.M.One(where...)
 	if err != nil {
 		return nil, err
 	}
-	var entity *model.Client
+	var entity *model.ChatroomUser
 	if err = one.Struct(&entity); err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -276,12 +276,12 @@ func (d *ClientDao) One(where ...interface{}) (*model.Client, error) {
 
 // FindOne retrieves and returns a single Record by M.WherePri and M.One.
 // Also see M.WherePri and M.One.
-func (d *ClientDao) FindOne(where ...interface{}) (*model.Client, error) {
+func (d *ChatroomUserDao) FindOne(where ...interface{}) (*model.ChatroomUser, error) {
 	one, err := d.M.FindOne(where...)
 	if err != nil {
 		return nil, err
 	}
-	var entity *model.Client
+	var entity *model.ChatroomUser
 	if err = one.Struct(&entity); err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -290,12 +290,12 @@ func (d *ClientDao) FindOne(where ...interface{}) (*model.Client, error) {
 
 // FindAll retrieves and returns Result by by M.WherePri and M.All.
 // Also see M.WherePri and M.All.
-func (d *ClientDao) FindAll(where ...interface{}) ([]*model.Client, error) {
+func (d *ChatroomUserDao) FindAll(where ...interface{}) ([]*model.ChatroomUser, error) {
 	all, err := d.M.FindAll(where...)
 	if err != nil {
 		return nil, err
 	}
-	var entities []*model.Client
+	var entities []*model.ChatroomUser
 	if err = all.Structs(&entities); err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (d *ClientDao) FindAll(where ...interface{}) ([]*model.Client, error) {
 //
 // user := (*User)(nil)
 // err  := dao.User.Where("id", 1).Struct(&user)
-func (d *ClientDao) Struct(pointer interface{}, where ...interface{}) error {
+func (d *ChatroomUserDao) Struct(pointer interface{}, where ...interface{}) error {
 	return d.M.Struct(pointer, where...)
 }
 
@@ -338,7 +338,7 @@ func (d *ClientDao) Struct(pointer interface{}, where ...interface{}) error {
 //
 // users := ([]*User)(nil)
 // err   := dao.User.Structs(&users)
-func (d *ClientDao) Structs(pointer interface{}, where ...interface{}) error {
+func (d *ChatroomUserDao) Structs(pointer interface{}, where ...interface{}) error {
 	return d.M.Structs(pointer, where...)
 }
 
@@ -363,14 +363,14 @@ func (d *ClientDao) Structs(pointer interface{}, where ...interface{}) error {
 //
 // users := ([]*User)(nil)
 // err   := dao.User.Scan(&users)
-func (d *ClientDao) Scan(pointer interface{}, where ...interface{}) error {
+func (d *ChatroomUserDao) Scan(pointer interface{}, where ...interface{}) error {
 	return d.M.Scan(pointer, where...)
 }
 
 // Chunk iterates the table with given size and callback function.
-func (d *ClientDao) Chunk(limit int, callback func(entities []*model.Client, err error) bool) {
+func (d *ChatroomUserDao) Chunk(limit int, callback func(entities []*model.ChatroomUser, err error) bool) {
 	d.M.Chunk(limit, func(result gdb.Result, err error) bool {
-		var entities []*model.Client
+		var entities []*model.ChatroomUser
 		err = result.Structs(&entities)
 		if err == sql.ErrNoRows {
 			return false
@@ -380,16 +380,16 @@ func (d *ClientDao) Chunk(limit int, callback func(entities []*model.Client, err
 }
 
 // LockUpdate sets the lock for update for current operation.
-func (d *ClientDao) LockUpdate() *ClientDao {
-	return &ClientDao{M: d.M.LockUpdate()}
+func (d *ChatroomUserDao) LockUpdate() *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.LockUpdate()}
 }
 
 // LockShared sets the lock in share mode for current operation.
-func (d *ClientDao) LockShared() *ClientDao {
-	return &ClientDao{M: d.M.LockShared()}
+func (d *ChatroomUserDao) LockShared() *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.LockShared()}
 }
 
 // Unscoped enables/disables the soft deleting feature.
-func (d *ClientDao) Unscoped() *ClientDao {
-	return &ClientDao{M: d.M.Unscoped()}
+func (d *ChatroomUserDao) Unscoped() *ChatroomUserDao {
+	return &ChatroomUserDao{M: d.M.Unscoped()}
 }

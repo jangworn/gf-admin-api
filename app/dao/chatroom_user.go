@@ -8,17 +8,17 @@ import (
 	"gf-admin-api/app/dao/internal"
 )
 
-// chatroomClientDao is the manager for logic model data accessing
+// chatroomUserDao is the manager for logic model data accessing
 // and custom defined data operations functions management. You can define
 // methods on it to extend its functionality as you wish.
-type chatroomClientDao struct {
-	internal.ChatroomClientDao
+type chatroomUserDao struct {
+	internal.ChatroomUserDao
 }
 
 var (
-	// ChatroomClient is globally public accessible object for table chatroom_client operations.
-	ChatroomClient = chatroomClientDao{
-		internal.ChatroomClient,
+	// ChatroomUser is globally public accessible object for table chatroom_user operations.
+	ChatroomUser = chatroomUserDao{
+		internal.ChatroomUser,
 	}
 )
 

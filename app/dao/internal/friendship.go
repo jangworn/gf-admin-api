@@ -26,13 +26,13 @@ type FriendshipDao struct {
 
 // FriendshipColumns defines and stores column names for table friendship.
 type friendshipColumns struct {
-	Id         string //
-	Applicant  string // 申请人
-	Respondent string // 被申请人
-	Message    string // 验证留言
-	CreateTime string // 时间
-	UpdateTime string // 更新时间
-	Status     string // 状态
+	Id           string //
+	ApplicantId  string // 申请人
+	RespondentId string // 被申请人
+	Message      string // 验证留言
+	CreateTime   string // 发起时间
+	UpdateTime   string // 更新时间
+	Status       string // 状态，0：已申请 1：已同意 2：已解除
 }
 
 var (
@@ -42,13 +42,13 @@ var (
 		DB:    g.DB("default"),
 		Table: "friendship",
 		Columns: friendshipColumns{
-			Id:         "id",
-			Applicant:  "applicant",
-			Respondent: "respondent",
-			Message:    "message",
-			CreateTime: "create_time",
-			UpdateTime: "update_time",
-			Status:     "status",
+			Id:           "id",
+			ApplicantId:  "applicant_id",
+			RespondentId: "respondent_id",
+			Message:      "message",
+			CreateTime:   "create_time",
+			UpdateTime:   "update_time",
+			Status:       "status",
 		},
 	}
 )

@@ -6,28 +6,16 @@ package model
 
 import (
 	"gf-admin-api/app/model/internal"
+	"github.com/gogf/gf/os/gtime"
 )
 
 // User is the golang structure for table user.
 type User internal.User
 
-// 注册输入参数
-type CreateUserReq struct {
-	Username   string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
-	Password   string `v:"required|length:6,16#请输入确认密码|密码长度应当在:min到:max之间"`
-	Password2  string `v:"required|length:6,16|same:Password#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等"`
-	Nickname   string
-	CreateTime string
-	Status     int
-}
-
-type UpdateUserReq struct {
-	Id         int
-	Username   string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
-	Password   string `v:"length:6,16#请输入确认密码|密码长度应当在:min到:max之间"`
-	Password2  string `v:"length:6,16|same:Password#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等"`
-	Nickname   string
-	UpdateTime string
-	Status     int
+type UserReq struct {
+	Id int
+	Nickname  string `v:"required|length:6,16#账号不能为空|账号长度应当在:min到:max之间"`
+	CreateTime *gtime.Time
+	Uid string
 }
 // Fill with you ideas below.

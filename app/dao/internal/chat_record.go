@@ -26,11 +26,13 @@ type ChatRecordDao struct {
 
 // ChatRecordColumns defines and stores column names for table chat_record.
 type chatRecordColumns struct {
-	Id       string // id
-	Sender   string // 发送人
-	Receiver string // 接收人
-	Content  string // 内容
-	Time     string // 时间
+	Id         string // id
+	SenderId   string // 发送人
+	ReceiverId string // 接收人
+	Content    string // 内容
+	CreateTime string // 创建时间
+	UpdateTime string // 更新时间
+	Status     string // 状态，0：未读 1：已读 2：已删除
 }
 
 var (
@@ -40,11 +42,13 @@ var (
 		DB:    g.DB("default"),
 		Table: "chat_record",
 		Columns: chatRecordColumns{
-			Id:       "id",
-			Sender:   "sender",
-			Receiver: "receiver",
-			Content:  "content",
-			Time:     "time",
+			Id:         "id",
+			SenderId:   "sender_id",
+			ReceiverId: "receiver_id",
+			Content:    "content",
+			CreateTime: "create_time",
+			UpdateTime: "update_time",
+			Status:     "status",
 		},
 	}
 )

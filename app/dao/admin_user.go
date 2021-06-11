@@ -8,17 +8,17 @@ import (
 	"gf-admin-api/app/dao/internal"
 )
 
-// clientDao is the manager for logic model data accessing
+// adminUserDao is the manager for logic model data accessing
 // and custom defined data operations functions management. You can define
 // methods on it to extend its functionality as you wish.
-type clientDao struct {
-	internal.ClientDao
+type adminUserDao struct {
+	internal.AdminUserDao
 }
 
 var (
-	// Client is globally public accessible object for table client operations.
-	Client = clientDao{
-		internal.Client,
+	// AdminUser is globally public accessible object for table admin_user operations.
+	AdminUser = adminUserDao{
+		internal.AdminUser,
 	}
 )
 

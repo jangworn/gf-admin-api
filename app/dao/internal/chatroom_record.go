@@ -26,11 +26,11 @@ type ChatroomRecordDao struct {
 
 // ChatroomRecordColumns defines and stores column names for table chatroom_record.
 type chatroomRecordColumns struct {
-	Id      string // id
-	Sender  string // 发送人id
-	Content string // 内容
-	Time    string // 时间
-	RoomId  string // 群聊id
+	Id         string // id
+	SenderId   string // 发送人id
+	Content    string // 内容
+	CreateTime string // 创建时间
+	RoomId     string // 群聊id
 }
 
 var (
@@ -40,11 +40,11 @@ var (
 		DB:    g.DB("default"),
 		Table: "chatroom_record",
 		Columns: chatroomRecordColumns{
-			Id:      "id",
-			Sender:  "sender",
-			Content: "content",
-			Time:    "time",
-			RoomId:  "room_id",
+			Id:         "id",
+			SenderId:   "sender_id",
+			Content:    "content",
+			CreateTime: "create_time",
+			RoomId:     "room_id",
 		},
 	}
 )

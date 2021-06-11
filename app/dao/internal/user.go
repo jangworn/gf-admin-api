@@ -26,13 +26,14 @@ type UserDao struct {
 
 // UserColumns defines and stores column names for table user.
 type userColumns struct {
-	Id         string // id
-	Username   string // 用户名
-	Nickname   string // 昵称
-	Password   string // 密码
-	CreateTime string // 创建时间
+	Id         string // 自增
+	Nickname   string // 客户名称
+	Uid        string // 客户唯一id
+	Phone      string // 手机号
+	Avatar     string // 头像
+	Status     string // 对话状态（1：机器人，2：排队中，3：人工对话）
 	UpdateTime string // 更新时间
-	Status     string // 状态，1：可用，0：停用
+	CreateTime string // 加入时间
 }
 
 var (
@@ -43,12 +44,13 @@ var (
 		Table: "user",
 		Columns: userColumns{
 			Id:         "id",
-			Username:   "username",
 			Nickname:   "nickname",
-			Password:   "password",
-			CreateTime: "create_time",
-			UpdateTime: "update_time",
+			Uid:        "uid",
+			Phone:      "phone",
+			Avatar:     "avatar",
 			Status:     "status",
+			UpdateTime: "update_time",
+			CreateTime: "create_time",
 		},
 	}
 )

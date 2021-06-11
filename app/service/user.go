@@ -1,166 +1,107 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"gf-admin-api/app/dao"
 	"gf-admin-api/app/model"
-	"github.com/gogf/gf/crypto/gmd5"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gvalid"
-	"strconv"
-)
-
-const (
-	USER_SESSION_MARK = "user_info"
+	"log"
+	"math/rand"
 )
 
 
+
+type ListInput struct {
+	Page  int
+	Limit int
+}
 
 var User = userService{}
 
-type userService struct{}
+type userService struct {
 
-// 用户注册
-func (s *userService)CreateUser(data *model.CreateUserReq) error {
-	// 输入参数检查
-	if e := gvalid.CheckStruct(data, nil); e != nil {
-		return errors.New(e.FirstString())
-	}
-	// 昵称为非必需参数，默认使用账号名称
-	if data.Nickname == "" {
-		data.Nickname = data.Username
-	}
-	// 账号唯一性数据检查
-	if !s.CheckPassport(data.Username) {
-		return errors.New(fmt.Sprintf("账号 %s 已经存在", data.Username))
-	}
-	// 昵称唯一性数据检查
-	if !s.CheckNickName(data.Nickname) {
-		return errors.New(fmt.Sprintf("昵称 %s 已经存在", data.Nickname))
-	}
-	// 将输入参数赋值到数据库实体对象上
-
-	// 记录账号创建/注册时间
-	data.CreateTime = gtime.Now().String()
-	data.Password, _ = gmd5.Encrypt(data.Password)
-	if _, err := dao.User.Save(data); err != nil {
-		return err
-	}
-	return nil
 }
-
-// 判断用户是否已经登录
-func (s *userService)IsSignedIn(session *ghttp.Session) bool {
-	return session.Contains(USER_SESSION_MARK)
-}
-
-// 用户登录，成功返回用户信息，否则返回nil; passport应当为md5值字符串
-func (s *userService)SignIn(Username, password string, session *ghttp.Session) (kfId int, err error) {
-	password, _ = gmd5.Encrypt(password)
-	user, err := dao.User.FindOne("username=? and password=?", Username, password)
-
-	if err != nil {
-		return
+//用户登录
+func (s *userService)SignIn(nickname string)(u *model.UserReq,err error){
+	user,err := dao.User.FindOne("nickname=?",nickname)
+	if user != nil{
+		u = &model.UserReq{
+			Id  :user.Id,
+			Nickname: user.Nickname,
+		}
 	}
-	if user == nil {
-		err = errors.New("账号或密码错误")
-		return
-	}
-	kfId = int(user.Id)
-
+	fmt.Println(u,err)
 	return
 }
-
-// 用户注销
-func SignOut(session *ghttp.Session) error {
-	return session.Remove(USER_SESSION_MARK)
-}
-
-// 检查账号是否符合规范(目前仅检查唯一性),存在返回false,否则true
-func (s *userService)CheckPassport(Username string) bool {
-	if i, err := dao.User.FindCount("username", Username); err != nil {
-		return false
-	} else {
-		return i == 0
+//用户注册
+func (s *userService)SignUp(nickname string) (u *model.UserReq){
+	fmt.Println("ddd")
+	u = &model.UserReq{
+		Nickname: nickname,
+		Uid:gconv.String(rand.Int()),
+		CreateTime : gtime.Now(),
 	}
-}
 
-// 检查昵称是否符合规范(目前仅检查唯一性),存在返回false,否则true
-func (s *userService)CheckNickName(nickname string) bool {
-	if i, err := dao.User.FindCount("nickname", nickname); err != nil {
-		return false
-	} else {
-		return i == 0
+	result,err := dao.User.Save(u)
+	if err != nil{
+		g.Log().Line().Println(err)
 	}
-}
-
-// 获得用户信息详情
-func (s *userService)GetProfile(session *ghttp.Session) (u *model.User) {
-	_ = session.GetStruct(USER_SESSION_MARK, &u)
+	uid,_ := result.LastInsertId()
+	u.Id = gconv.Int(uid)
 	return
 }
-
 // 获得用户列表
 func (s *userService)GetList() (list []*model.User) {
 	list, _ = dao.User.FindAll()
 	return
 }
 
-func (s *userService)UpdateUser(data *model.UpdateUserReq) error {
-	// 输入参数检查
-	if e := gvalid.CheckStruct(data, nil); e != nil {
-		return errors.New(e.FirstString())
-	}
-	// 昵称为非必需参数，默认使用账号名称
-	if data.Nickname == "" {
-		data.Nickname = data.Username
-	}
-
-	// 记录账号创建/注册时间
-	m := gconv.Map(data)
-	m["UpdateTime"] = gtime.Now().String()
-	delete(m, "Id")
-	if data.Password != "" {
-		m["Password"], _ = gmd5.Encrypt(m["Password"])
-	} else {
-		delete(m, "Password")
-	}
-	fmt.Println("pwd:",m)
-	if _, err := dao.User.Update(m, "id="+strconv.Itoa(data.Id)); err != nil {
-		return err
-	}
-	return nil
-}
-//客服接待：排队中的用户
-func  (s *userService)QueueList() (list []*model.Client,err error){
-	list, err = dao.Client.Where("status=2").Order("latest_time asc").All()
+func (s *userService)GetFriendship(respondent_id uint,status int) (list []*model.Friendship){
+	list, _ = dao.Friendship.FindAll("respondent_id=? and status=?",respondent_id,status)
 	return
 }
 
-func (s *userService)ConversationList()(data map[string]interface{},err error) {
-	list, err := dao.Client.Where("status=3 or status =2").Order("latest_time asc").All()
-	if err != nil {
-		fmt.Println("err = ", err)
-		return
-	}
-	data = make(map[string]interface{})
-	var queue []interface{}
-	var conversation []interface{}
-	if len(list) > 0 {
-		for _, v := range list {
-			fmt.Println(v.Status)
-			if status := v.Status; status == 2 {
-				queue = append(queue, v)
-			} else {
-				conversation = append(conversation, v)
-			}
-		}
-	}
+func (s *userService)GetFriendshipOne(id int) (one *model.Friendship){
+	one, _ = dao.Friendship.FindOne("id=?",id)
+	return
+}
 
-	data["queue"] = queue
-	data["conversation"] = conversation
+func (s *userService)UpdateFriendship(id,status int) (err error){
+	_, err = dao.Friendship.Update(g.Map{"status":status},"id=?",id)
+	return
+}
+
+func (s *userService)CreateChatroom() (lastInsertId int64,err error) {
+	res,err := dao.Chatroom.Insert(g.Map{"name":"群聊","create_time":gtime.Datetime()})
+	if err != nil{
+		log.Fatalf("创建聊天室失败:%s",err)
+		return 0,err
+	}
+	lastInsertId,_ = res.LastInsertId()
+
+	return lastInsertId,nil
+}
+
+func (s *userService)InsertChatroomUser(owner int,room_id int64,checkedUsers []int) (err error){
+
+	if len(checkedUsers) == 0 {
+			return gerror.New("参数错误")
+	}
+	var list g.List
+	for _,val := range checkedUsers{
+		list = append(list, g.Map{"room_id":room_id,"user_id":val,"is_owner":0})
+	}
+	list = append(list, g.Map{"room_id":room_id,"user_id":owner,"is_owner":1})
+	dao.ChatroomUser.Data(list).Insert()
+	return nil
+}
+
+func (s *userService)GetChatroomList(uid string) (list []*model.Chatroom){
+	list, _ = dao.Chatroom.LeftJoin("chatroom_user cc","chatroom.id = cc.room_id").Fields("chatroom.id,name").Where("cc.user_id=?",uid).And("chatroom.id>?",1).FindAll()
+	var item = &model.Chatroom{Id:1,Name:"公共聊天室"}
+	list = append([]*model.Chatroom{item},list...)
 	return
 }

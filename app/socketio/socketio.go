@@ -12,7 +12,6 @@ import (
 	"github.com/googollee/go-socket.io/engineio/transport"
 	"github.com/googollee/go-socket.io/engineio/transport/polling"
 	"github.com/googollee/go-socket.io/engineio/transport/websocket"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,13 +28,13 @@ type Msg struct {
 }
 
 type User struct {
-	Id string `json:"id"`
+	Id      string `json:"id"`
+	RoomId  string `json:"roomId"`
+	Content string `json:"content"`
 }
 
-type Client struct{
+type Client struct {
 	Uid string `json:"uid"`
-	RoomId string `json:"roomId"`
-	Content string `json:"content"`
 }
 
 type Receive struct {
@@ -44,16 +43,16 @@ type Receive struct {
 }
 
 type Record struct {
-	Id      int
-	Content string
-	Time    string
-	Sender  string
+	Id         int
+	Content    string
+	CreateTime string
+	SenderId   string
 }
 
 type Frindship struct {
-	Applicant string
+	Applicant  string
 	Respondent string
-	Message string
+	Message    string
 }
 
 func Server() (server *socketio.Server) {
@@ -106,49 +105,49 @@ func Server() (server *socketio.Server) {
 
 		msg.Content, _ = gbase64.DecodeToString(msg.Content)
 		content, _ := url.QueryUnescape(msg.Content)
-		u, err := dao.Client.Where("uid=?", msg.Uid).FindOne()
+		u, err := dao.User.Where("uid=?", msg.Uid).FindOne()
 		if err != nil {
-			log.Fatalf("查询client失败：%s", err)
+			g.Log().Line().Println("查询client失败：%s", err)
 		}
 		//判断客户在client表中是否存在，存在更新latest_time,不存在插入客户表
 		if u.Id == 0 {
-			_, err := dao.Client.Data(g.Map{"uid": msg.Uid, "join_time": gtime.Datetime(), "latest_time": gtime.Datetime()}).Insert()
+			_, err := dao.User.Data(g.Map{"uid": msg.Uid, "join_time": gtime.Datetime(), "latest_time": gtime.Datetime()}).Insert()
 			if err != nil {
-				log.Fatalf("插入client失败：%s", err)
+				g.Log().Line().Println("插入client失败：%s", err)
 			}
 		} else {
-			_, err := dao.Client.Data(g.Map{"latest_time": gtime.Datetime()}).Where("uid=?", msg.Uid).Update()
+			_, err := dao.User.Data(g.Map{"latest_time": gtime.Datetime()}).Where("uid=?", msg.Uid).Update()
 			if err != nil {
-				log.Fatalf("更新client失败：%s", err)
+				g.Log().Line().Println("更新client失败：%s", err)
 			}
 		}
 
 		//插入用户输入内容
 		//_,err = chat_record.Model.Data(g.Map{"sender":msg.Uid,"receiver":999,"content":"to_base64(aes_encrypt("+msg.Content+","+DataEncryptionKey+"))","time":gtime.Datetime()}).Insert()
-		_, err = db.Query("insert into chat_record(sender,receiver,content,time) value('" + msg.Uid + "',999,to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "');")
+		_, err = db.Query("insert into chat_record(sender_id,receiver_id,content,time) value('" + msg.Uid + "',999,to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "');")
 		if err != nil {
-			log.Fatalf("问题写入失败：%s", err)
+			g.Log().Line().Println("问题写入失败：%s", err)
 		}
 
 		//判断客户是否和人工对话中
-		if u.Id > 0 && u.Status == 3 {
+		/*if u.Id > 0 && u.Status == 3 {
 			server.BroadcastToRoom("", u.KfId, "putQuestion", msg)
 			fmt.Println("推送给客服：" + u.KfId)
 			return
-		}
+		}*/
 
 		//判断是否是转人工
 		if ok := strings.Contains(content, "人工"); ok {
 			//更新客户状态为排队中
-			_, err := dao.Client.Data(g.Map{"status": 2}).Where("uid=?", msg.Uid).Update()
+			_, err := dao.User.Data(g.Map{"status": 2}).Where("uid=?", msg.Uid).Update()
 			if err != nil {
-				log.Fatalf("更新client status失败：%s", err)
+				g.Log().Line().Println("更新client status失败：%s", err)
 				return
 			}
 			g.Redis().DoVar("RPUSH", "queue_list", msg.Uid)
 			queueCount, err := g.Redis().Do("LLEN", "queue_list")
 			if err != nil {
-				log.Fatalf("获取排队人数失败：%s", err)
+				g.Log().Line().Println("获取排队人数失败：%s", err)
 			}
 			server.BroadcastToRoom("", "kf_group", "queueCount", queueCount)
 			server.BroadcastToRoom("", "kf_group", "enterQueue", msg)
@@ -156,9 +155,9 @@ func Server() (server *socketio.Server) {
 
 		var answer Msg
 		answer.Content = "hello"
-		_, err2 := db.Query("insert into chat_record(sender,receiver,content,time) value(999,'" + msg.Uid + "',to_base64(aes_encrypt('" + answer.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "');")
+		_, err2 := db.Query("insert into chat_record(sender_id,receiver_id,content,time) value(999,'" + msg.Uid + "',to_base64(aes_encrypt('" + answer.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "');")
 		if err2 != nil {
-			log.Fatalf("答案写入失败：", err2)
+			g.Log().Line().Println("答案写入失败：", err2)
 		}
 		s.Emit("reply", answer)
 	})
@@ -166,9 +165,9 @@ func Server() (server *socketio.Server) {
 	//客服回复
 	server.OnEvent("/", "reply", func(s socketio.Conn, msg Msg) {
 		msg.Content, _ = gbase64.DecodeToString(msg.Content)
-		_, err2 := db.Query("insert into chat_record(sender,receiver,content,time) value(1,'" + msg.Uid + "',to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "');")
+		_, err2 := db.Query("insert into chat_record(sender_id,receiver_id,content,time) value(1,'" + msg.Uid + "',to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "');")
 		if err2 != nil {
-			log.Fatalf("答案写入失败：", err2)
+			g.Log().Line().Println("答案写入失败：", err2)
 		}
 		msg.Content, _ = url.QueryUnescape(msg.Content)
 		server.BroadcastToRoom("", msg.Uid, "reply", msg)
@@ -177,9 +176,9 @@ func Server() (server *socketio.Server) {
 
 	//客户H5初始化数据
 	server.OnEvent("/", "initData", func(s socketio.Conn, msg Msg) {
-		r,err := dao.ChatroomRecord.Fields("id,sender,receiver,aes_decrypt(from_base64(content),'"+DataEncryptionKey+"') as content ,time").Where("sender=?", msg.Uid).Or("receiver=?", msg.Uid).Order("time asc").All()
+		r, err := dao.ChatroomRecord.Fields("id,sender_id,receiver_id,aes_decrypt(from_base64(content),'"+DataEncryptionKey+"') as content ,create_time").Where("sender_id=?", msg.Uid).Or("receiver_id=?", msg.Uid).Order("create_time asc").All()
 		if err != nil {
-			log.Fatalf("初始化失败：", err)
+			g.Log().Line().Println("初始化失败：", err)
 		}
 		s.Emit("initData", r)
 	})
@@ -188,25 +187,25 @@ func Server() (server *socketio.Server) {
 	server.OnEvent("/", "receive", func(s socketio.Conn, msg Receive) {
 		fmt.Println(msg)
 
-		_, err1 := dao.Client.Where("uid=?", msg.Uid).FindOne()
+		_, err1 := dao.User.Where("uid=?", msg.Uid).FindOne()
 		if err1 != nil {
-			log.Fatalf("查询client失败：%s", err1)
+			g.Log().Line().Println("查询client失败：%s", err1)
 			return
 		}
 		_, err2 := g.Redis().DoVar("LREM", "queue_list", 0, msg.Uid)
 		fmt.Println(msg.Uid)
 		if err2 != nil {
-			log.Fatalf("排队队列删除当前uid失败：%s", err2)
+			g.Log().Line().Println("排队队列删除当前uid失败：%s", err2)
 			return
 		}
 		//更新客户状态为接待中
-		_, err3 := dao.Client.Data(g.Map{"status": 3, "kf_id": msg.KFID}).Where("uid=?", msg.Uid).Update()
+		_, err3 := dao.User.Data(g.Map{"status": 3, "kf_id": msg.KFID}).Where("uid=?", msg.Uid).Update()
 		if err3 != nil {
-			log.Fatalf("更新client status失败：%s", err)
+			g.Log().Line().Println("更新client status失败：%s", err)
 		}
 		queueCount, err := g.Redis().Do("LLEN", "queue_list")
 		if err != nil {
-			log.Fatalf("获取排队人数失败：%s", err)
+			g.Log().Line().Println("获取排队人数失败：%s", err)
 		}
 		server.BroadcastToRoom("", "kf_group", "queueCount", queueCount)
 		server.BroadcastToRoom("", "kf_group", "deleteQueueOne", msg)
@@ -218,68 +217,60 @@ func Server() (server *socketio.Server) {
 	server.OnEvent("/", "endConversation", func(s socketio.Conn, uid string) {
 
 		if uid == "" {
-			log.Fatalf("结束会话参数错误：%s", err)
+			g.Log().Line().Println("结束会话参数错误：%s", err)
 			return
 		}
-		_, err3 := dao.Client.Data(g.Map{"status": 1}).Where("uid=?", uid).Update()
+		_, err3 := dao.User.Data(g.Map{"status": 1}).Where("uid=?", uid).Update()
 		if err3 != nil {
-			log.Fatalf("更新user status=1失败：%s", err)
+			g.Log().Line().Println("更新user status=1失败：%s", err)
 		}
 
 	})
 
 	//进入聊天室
-	server.OnEvent("/", "enterRoom", func(s socketio.Conn, msg Client) {
-		s.Join(msg.Uid)
-		fmt.Println("进入聊天室:" + msg.Uid)
-		roomId := "room"+ msg.RoomId
+	server.OnEvent("/", "enterRoom", func(s socketio.Conn, user User) {
+		s.Join(user.Id)
+		g.Log().Line().Println("进入聊天室:" + user.Id)
+		roomId := "room" + user.RoomId
 		s.Join(roomId)
-		r, err := dao.ChatroomRecord.Fields("id,sender,aes_decrypt(from_base64(content),'" + DataEncryptionKey + "') as content ,time").Where("room_id=?",msg.RoomId).Order("time asc").All()
+		r, err := dao.ChatroomRecord.Fields("id,sender_id,aes_decrypt(from_base64(content),'"+DataEncryptionKey+"') as content ,create_time").Where("room_id=?", user.RoomId).Order("create_time asc").All()
 		if err != nil {
-			log.Fatalf("初始化失败：%s", err)
+			g.Log().Line().Println("初始化失败：%s", err)
 		}
 		server.BroadcastToRoom("", roomId, "roomLen", server.RoomLen("", roomId))
 		s.Emit("initRoomData", r)
 	})
 
 	//发送内容到聊天室
-	server.OnEvent("/", "sendToRoom", func(s socketio.Conn, msg Client) {
-
-		msg.Content, _ = gbase64.DecodeToString(msg.Content)
-		content, _ := url.QueryUnescape(msg.Content)
-		roomId := "room"+ msg.RoomId
-		u, err := dao.Client.Where("uid=?", msg.Uid).FindOne()
+	server.OnEvent("/", "sendToRoom", func(s socketio.Conn, user User) {
+		user.Content, _ = gbase64.DecodeToString(user.Content)
+		content, _ := url.QueryUnescape(user.Content)
+		roomId := "room" + user.RoomId
+		u, err := dao.User.Where("id=?", user.Id).FindOne()
 		if err != nil {
-			log.Fatalf("查询user失败：%s", err)
+			g.Log().Line().Println("查询user失败：%s", err)
 		}
-		fmt.Println(u)
 		//判断客户在client表中是否存在，存在更新latest_time,不存在插入客户表
 		if u == nil {
-			_, err := dao.Client.Data(g.Map{"uid": msg.Uid, "join_time": gtime.Datetime(), "latest_time": gtime.Datetime()}).Insert()
+			_, err := dao.User.Data(g.Map{"id": user.Id, "join_time": gtime.Datetime(), "latest_time": gtime.Datetime()}).Insert()
 			if err != nil {
-				log.Fatalf("插入user失败：%s", err)
-			}
-		} else {
-			_, err := dao.Client.Data(g.Map{"latest_time": gtime.Datetime()}).Where("uid=?", msg.Uid).Update()
-			if err != nil {
-				log.Fatalf("更新user失败：%s", err)
+				g.Log().Line().Println("插入user失败：%s", err)
 			}
 		}
 
 		//插入用户输入内容
-		_, err = db.Query("insert into chatroom_record(sender,content,time,room_id) value('" + msg.Uid + "',to_base64(aes_encrypt('" + msg.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "','"+msg.RoomId+"');")
+		_, err = db.Query("insert into chatroom_record(sender_id,content,create_time,room_id) value('" + user.Id + "',to_base64(aes_encrypt('" + user.Content + "','" + DataEncryptionKey + "')),'" + gtime.Datetime() + "','" + user.RoomId + "');")
 		if err != nil {
-			log.Fatalf("问题写入失败：%s", err)
+			g.Log().Line().Println("问题写入失败：%s", err)
 		}
-		fmt.Println("广播:" + content)
-		server.BroadcastToRoom("", roomId, "broadcast", Record{Id: 1, Content: content, Time: gtime.Datetime(), Sender: msg.Uid})
+		server.BroadcastToRoom("", roomId, "broadcast", Record{Id: 1, Content: content, CreateTime: gtime.Datetime(), SenderId: user.Id})
 	})
 
 	//加好友
-	server.OnEvent("/", "addFriend", func(s socketio.Conn, msg Frindship)  {
-		_, err := dao.Friendship.Data(g.Map{"applicant": msg.Applicant, "respondent":msg.Respondent,"message":msg.Message,"create_time": gtime.Datetime()}).Insert()
-		if err != nil{
-			log.Fatalf("申请好友写入失败：%s", err)
+	server.OnEvent("/", "addFriend", func(s socketio.Conn, msg Frindship) {
+		_, err := dao.Friendship.Data(g.Map{"applicant": msg.Applicant, "respondent": msg.Respondent, "message": msg.Message, "create_time": gtime.Datetime()}).Insert()
+		if err != nil {
+			g.Log().Line().Println("申请好友写入失败：%s", err)
 		}
 	})
 	server.OnEvent("/chat", "msg", func(s socketio.Conn, msg string) string {

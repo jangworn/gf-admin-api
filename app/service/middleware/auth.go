@@ -128,7 +128,7 @@ func Authenticator(r *ghttp.Request) (interface{}, error) {
 		return "", errors.New("incorrect Username or Password")
 	}
 
-	if kfId, err := service.User.SignIn(data["username"].(string), data["password"].(string), r.Session); err != nil {
+	if kfId, err := service.AdminUser.SignIn(data["username"].(string), data["password"].(string), r.Session); err != nil {
 		return "", jwt.ErrFailedAuthentication
 	} else {
 		return g.Map{

@@ -15,7 +15,7 @@ type receiveController struct{}
 
 func (c *receiveController) GetQueueList(r *ghttp.Request) {
 
-	list, err := service.User.QueueList()
+	list, err := service.AdminUser.QueueList()
 	if err != nil {
 		fmt.Println("err = ", err)
 		return
@@ -24,7 +24,7 @@ func (c *receiveController) GetQueueList(r *ghttp.Request) {
 }
 
 func (c *receiveController) GetConversationList(r *ghttp.Request) {
-	data, err := service.User.ConversationList()
+	data, err := service.AdminUser.ConversationList()
 	if err != nil {
 		fmt.Println("err = ", err)
 		return

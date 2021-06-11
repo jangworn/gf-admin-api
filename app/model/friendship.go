@@ -11,4 +11,10 @@ import (
 // Friendship is the golang structure for table friendship.
 type Friendship internal.Friendship
 
+type FriendshipReq struct {
+	Id int `v:"required|length:1,16#好友关系ID不能为空|长度应当在:min到:max之间"`
+	FrindId int `v:"required|length:1,16#好友ID不能为空|长度应当在:min到:max之间"`
+	UserId uint `v:"required|length:1,16#用户ID不能为空|长度应当在:min到:max之间"`
+	Status int `v:"required|length:1,16#状态不能为空|长度应当在:min到:max之间"`
+}
 // Fill with you ideas below.

@@ -10,11 +10,11 @@ import (
 
 // Friendship is the golang structure for table friendship.
 type Friendship struct {
-	Id         uint        `orm:"id,primary"  json:"id"`         //
-	Applicant  string      `orm:"applicant"   json:"applicant"`  // 申请人
-	Respondent string      `orm:"respondent"  json:"respondent"` // 被申请人
-	Message    string      `orm:"message"     json:"message"`    // 验证留言
-	CreateTime *gtime.Time `orm:"create_time" json:"createTime"` // 时间
-	UpdateTime *gtime.Time `orm:"update_time" json:"updateTime"` // 更新时间
-	Status     uint        `orm:"status"      json:"status"`     // 状态
+	Id           uint        `orm:"id,primary"    json:"id"`           //
+	ApplicantId  uint        `orm:"applicant_id"  json:"applicantId"`  // 申请人
+	RespondentId uint        `orm:"respondent_id" json:"respondentId"` // 被申请人
+	Message      string      `orm:"message"       json:"message"`      // 验证留言
+	CreateTime   *gtime.Time `orm:"create_time"   json:"createTime"`   // 发起时间
+	UpdateTime   *gtime.Time `orm:"update_time"   json:"updateTime"`   // 更新时间
+	Status       uint        `orm:"status"        json:"status"`       // 状态，0：已申请 1：已同意 2：已解除
 }
