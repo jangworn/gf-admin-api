@@ -46,7 +46,7 @@ func (s *adminUserService)CreateUser(data *model.CreateUserReq) error {
 	// 记录账号创建/注册时间
 	data.CreateTime = gtime.Now().String()
 	data.Password, _ = gmd5.Encrypt(data.Password)
-	if _, err := dao.User.Save(data); err != nil {
+	if _, err := dao.AdminUser.Save(data); err != nil {
 		return err
 	}
 	return nil
@@ -60,7 +60,7 @@ func (s *adminUserService)IsSignedIn(session *ghttp.Session) bool {
 // 用户登录，成功返回用户信息，否则返回nil; passport应当为md5值字符串
 func (s *adminUserService)SignIn(Username, password string, session *ghttp.Session) (kfId int, err error) {
 	password, _ = gmd5.Encrypt(password)
-	user, err := dao.User.FindOne("username=? and password=?", Username, password)
+	user, err := dao.AdminUser.FindOne("username=? and password=?", Username, password)
 
 	if err != nil {
 		return
@@ -81,7 +81,7 @@ func SignOut(session *ghttp.Session) error {
 
 // 检查账号是否符合规范(目前仅检查唯一性),存在返回false,否则true
 func (s *adminUserService)CheckPassport(Username string) bool {
-	if i, err := dao.User.FindCount("username", Username); err != nil {
+	if i, err := dao.AdminUser.FindCount("username", Username); err != nil {
 		return false
 	} else {
 		return i == 0
@@ -90,7 +90,7 @@ func (s *adminUserService)CheckPassport(Username string) bool {
 
 // 检查昵称是否符合规范(目前仅检查唯一性),存在返回false,否则true
 func (s *adminUserService)CheckNickName(nickname string) bool {
-	if i, err := dao.User.FindCount("nickname", nickname); err != nil {
+	if i, err := dao.AdminUser.FindCount("nickname", nickname); err != nil {
 		return false
 	} else {
 		return i == 0
@@ -129,7 +129,7 @@ func (s *adminUserService)UpdateUser(data *model.UpdateUserReq) error {
 		delete(m, "Password")
 	}
 	fmt.Println("pwd:",m)
-	if _, err := dao.User.Update(m, "id="+strconv.Itoa(data.Id)); err != nil {
+	if _, err := dao.AdminUser.Update(m, "id="+strconv.Itoa(data.Id)); err != nil {
 		return err
 	}
 	return nil

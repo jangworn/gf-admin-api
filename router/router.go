@@ -13,11 +13,11 @@ func init() {
 	s.BindMiddlewareDefault(middleware.CORS)
 	s.BindHandler("OPTIONS/POST:/signIn", middleware.GfJWTMiddleware.LoginHandler)
 	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.ALL("/client", api.Clienter)
+		group.ALL("/user", api.User)
 		group.Middleware(middleware.Auth)
 		group.ALLMap(g.Map{
 			"/refreshToken":middleware.GfJWTMiddleware.RefreshHandler,
-			"/user":api.User,
+			"/admin":api.AdminUser,
 			"/receive": api.Receiver,
 		})
 	})
