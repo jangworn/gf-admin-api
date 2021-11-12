@@ -4,7 +4,7 @@
 
 ### web
 [gf-admin-web](https://github.com/jangworn/gf-admin-web)  
-[简易聊天室chat-room](https://github.com/jangworn/chat-room)  
+[简易聊天室chat-room](https://github.com/jangworn/chat-room)  [在线demo](http://johnyn.com:8080/chat-room) 
 
 
 #### golang环境搭建
